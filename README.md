@@ -1,4 +1,4 @@
-# 🐶 犬の気持ち読み取り機
+# 🐶 わんわん翻訳機
 
 AIがあなたの愛犬の気持ちを代弁するWebアプリです。
 
@@ -31,6 +31,7 @@ firebase functions:secrets:set ANTHROPIC_API_KEY
 firebase functions:secrets:set PAYPAY_API_KEY
 firebase functions:secrets:set PAYPAY_API_SECRET
 firebase functions:secrets:set PAYPAY_MERCHANT_ID
+firebase functions:secrets:set STRIPE_SECRET_KEY
 ```
 
 ## デプロイ
@@ -47,3 +48,13 @@ firebase deploy
 ```
 https://asia-northeast1-wanwan-translator.cloudfunctions.net/payPayWebhook
 ```
+
+## Stripe Webhook URL
+
+デプロイ後、以下のURLをStripeダッシュボードのWebhookエンドポイントに設定してください：
+
+```
+https://asia-northeast1-wanwan-translator.cloudfunctions.net/stripeWebhook
+```
+
+イベントは `checkout.session.completed` を選択してください。

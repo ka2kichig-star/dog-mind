@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>わんにゃん翻訳機 🐶🐱 | 愛犬・愛猫の気持ち、AIがリアルに翻訳</title>
+  <meta name="description" content="AIがあなたの愛犬・愛猫の気持ちを代弁！写真診断、行動診断、おしゃべり会話、虹の橋機能。1日1回・登録後1週間は毎日3回完全無料！">
+  <meta property="og:title" content="わんにゃん翻訳機 🐶🐱 | 愛犬・愛猫の気持ち、AIがリアルに翻訳">
+  <meta property="og:description" content="AIがあなたの愛犬・愛猫の気持ちを代弁。写真診断、行動診断、おしゃべり会話、虹の橋機能。初回3回無料！">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://wanwan-translator.web.app/lp.html">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ===== CSS variables (Following index.html design language) ===== */
+    :root {
+      --dog-primary: #f4a261;
+      --dog-primary-dark: #e07020;
+      --dog-light: #fff8f0;
+      
+      --cat-primary: #ff85a1;
+      --cat-primary-dark: #f06292;
+      --cat-light: #fff0f3;
+      
+      --rainbow-primary: #a084ca;
+      --rainbow-primary-dark: #7c5cbf;
+      --rainbow-light: #faf4ff;
+
+      --text-main: #4a3f35;
+      --text-sub: #7a6e65;
+      --bg-base: #fefcf9;
+      --white: #ffffff;
+    }
+
+    /* ===== Reset ===== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Zen Maru Gothic', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ===== Common styles ===== */
+    h1, h2, h3, h4 {
+      font-weight: 900;
+    }
+
+    section {
+      padding: 70px 0;
+      position: relative;
+    }
+
+    /* ===== Animations ===== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(2deg); }
+    }
+
+    @keyframes bounce-subtle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    @keyframes shine {
+      0% { left: -100%; }
+      50% { left: 100%; }
+      100% { left: 100%; }
+    }
+
+    /* ===== Buttons & CTA ===== */
+    .btn-cta {
+      display: inline-block;
+      text-decoration: none;
+      background: linear-gradient(135deg, var(--dog-primary), var(--cat-primary));
+      color: var(--white);
+      font-weight: 900;
+      font-size: 18px;
+      padding: 16px 44px;
+      border-radius: 40px;
+      box-shadow: 0 8px 30px rgba(244, 162, 97, 0.35);
+      transition: all 0.3s ease;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-cta::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+      transform: skewX(-25deg);
+      animation: shine 4s infinite linear;
+    }
+
+    .btn-cta:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(240, 98, 146, 0.45);
+    }
+
+    /* ===== 1. Hero Section ===== */
+    .hero {
+      background: linear-gradient(180deg, var(--white) 0%, var(--dog-light) 50%, var(--cat-light) 100%);
+      padding: 80px 0 60px;
+      text-align: center;
+      border-radius: 0 0 48px 48px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      background: var(--white);
+      color: var(--cat-primary-dark);
+      font-size: 12px;
+      font-weight: 900;
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 24px;
+      border: 2px solid var(--cat-primary);
+      box-shadow: 0 4px 12px rgba(255, 133, 161, 0.15);
+      animation: bounce-subtle 2s infinite ease-in-out;
+    }
+
+    .hero-title {
+      font-size: clamp(28px, 8vw, 38px);
+      line-height: 1.45;
+      margin-bottom: 20px;
+      letter-spacing: -0.5px;
+    }
+
+    .hero-title .gradient-text {
+      background: linear-gradient(135deg, var(--dog-primary-dark) 0%, var(--cat-primary-dark) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 15px;
+      color: var(--text-sub);
+      margin-bottom: 36px;
+      font-weight: 500;
+    }
+
+    .hero-illustration {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      font-size: 80px;
+      margin-bottom: 32px;
+    }
+
+    .hero-illustration .dog-emoji {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .hero-illustration .cat-emoji {
+      animation: float 3s ease-in-out infinite 1.5s;
+    }
+
+    /* ===== 2. Pain Points ===== */
+    .pain-points {
+      background-color: var(--bg-base);
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 12px;
+      color: var(--text-main);
+    }
+
+    .section-title span {
+      background: linear-gradient(135deg, var(--dog-primary-dark) 0%, var(--cat-primary-dark) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 900;
+    }
+
+    .section-desc {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-bottom: 40px;
+    }
+
+    .pain-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .pain-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 20px 16px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(74, 59, 50, 0.03);
+      border: 2px solid #ffeedd;
+      transition: transform 0.2s;
+    }
+
+    .pain-card.cat-themed {
+      border-color: #ffe3e8;
+    }
+
+    .pain-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .pain-card .icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .pain-card p {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.5;
+    }
+
+    /* ===== 3. Feature Showcase ===== */
+    .features {
+      background: var(--white);
+      border-radius: 40px;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.02);
+    }
+
+    .features-list {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .feature-item {
+      display: flex;
+      gap: 20px;
+      background: var(--bg-base);
+      border-radius: 24px;
+      padding: 24px;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .feature-item.dog-border {
+      border-color: #ffeedd;
+    }
+    .feature-item.cat-border {
+      border-color: #ffe3e8;
+    }
+    .feature-item.rainbow-border {
+      border-color: #f3eaff;
+    }
+
+    .feature-icon {
+      font-size: 40px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .feature-details h3 {
+      font-size: 17px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature-details .badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 900;
+      color: var(--white);
+    }
+
+    .badge.dog { background-color: var(--dog-primary-dark); }
+    .badge.cat { background-color: var(--cat-primary-dark); }
+    .badge.rainbow { background-color: var(--rainbow-primary-dark); }
+    .badge.common { background-color: #7a6e65; }
+
+    .feature-details p {
+      font-size: 13px;
+      color: var(--text-sub);
+      line-height: 1.6;
+    }
+
+    /* ===== 4. Steps Section ===== */
+    .steps {
+      background-color: var(--bg-base);
+    }
+
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .step-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 4px 16px rgba(74, 59, 50, 0.03);
+      border: 2px solid #eef2f5;
+    }
+
+    .step-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--dog-primary), var(--cat-primary));
+      color: var(--white);
+      font-weight: 900;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-info h4 {
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .step-info p {
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    /* ===== 5. Pricing Plan (Table-like) ===== */
+    .plans {
+      background: var(--white);
+      border-radius: 40px;
+    }
+
+    .pricing-table {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .pricing-card {
+      border: 2px solid #eef2f5;
+      border-radius: 24px;
+      padding: 24px;
+      position: relative;
+      background: var(--white);
+      overflow: hidden;
+    }
+
+    .pricing-card.featured {
+      border-color: var(--cat-primary);
+      background: linear-gradient(180deg, var(--white) 0%, var(--cat-light) 100%);
+      box-shadow: 0 8px 30px rgba(255, 133, 161, 0.15);
+    }
+
+    .pricing-card.rainbow-free {
+      border-color: var(--rainbow-primary);
+      background: linear-gradient(180deg, var(--white) 0%, var(--rainbow-light) 100%);
+    }
+
+    .plan-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: linear-gradient(135deg, var(--cat-primary), var(--cat-primary-dark));
+      color: var(--white);
+      font-size: 10px;
+      font-weight: 900;
+      padding: 6px 16px;
+      border-radius: 0 24px 0 14px;
+    }
+
+    .pricing-card.rainbow-free .plan-badge {
+      background: linear-gradient(135deg, var(--rainbow-primary), var(--rainbow-primary-dark));
+    }
+
+    .plan-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+
+    .plan-name {
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .plan-price {
+      font-size: 30px;
+      font-weight: 900;
+      color: var(--dog-primary-dark);
+    }
+
+    .pricing-card.featured .plan-price {
+      color: var(--cat-primary-dark);
+    }
+
+    .pricing-card.rainbow-free .plan-price {
+      color: var(--rainbow-primary-dark);
+    }
+
+    .plan-price span {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-sub);
+    }
+
+    .plan-features {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px dashed #eef2f5;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .plan-features li {
+      font-size: 12px;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .plan-features li::before {
+      content: '✓';
+      font-weight: 900;
+      color: var(--dog-primary-dark);
+    }
+
+    .pricing-card.featured .plan-features li::before {
+      color: var(--cat-primary-dark);
+    }
+
+    .pricing-card.rainbow-free .plan-features li::before {
+      color: var(--rainbow-primary-dark);
+    }
+
+    /* ===== 6. Testimonials ===== */
+    .testimonials {
+      background-color: var(--bg-base);
+    }
+
+    .testimonial-carousel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .testimonial-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 16px rgba(74, 59, 50, 0.03);
+      border: 2px solid #ffeedd;
+    }
+
+    .testimonial-card.cat-owner {
+      border-color: #ffe3e8;
+    }
+
+    .test-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .test-avatar {
+      font-size: 32px;
+      background: var(--dog-light);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .testimonial-card.cat-owner .test-avatar {
+      background: var(--cat-light);
+    }
+
+    .test-user-info h5 {
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .test-user-info span {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .test-comment {
+      font-size: 13px;
+      color: var(--text-main);
+      line-height: 1.6;
+    }
+
+    /* ===== 7. FAQ Section ===== */
+    .faq {
+      background: var(--white);
+      border-radius: 40px;
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .faq-item {
+      border-bottom: 1.5px solid #F0E4D3;
+      padding-bottom: 16px;
+    }
+
+    .faq-question {
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--dog-primary-dark);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .faq-item.cat-faq .faq-question {
+      color: var(--cat-primary-dark);
+    }
+
+    .faq-answer {
+      font-size: 13px;
+      color: var(--text-sub);
+      line-height: 1.7;
+      padding-left: 24px;
+    }
+
+    /* ===== 8. Final CTA ===== */
+    .final-cta {
+      background: linear-gradient(180deg, var(--white) 0%, var(--dog-light) 50%, var(--cat-light) 100%);
+      text-align: center;
+      padding: 80px 0;
+      border-radius: 48px 48px 0 0;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.02);
+    }
+
+    .final-cta h2 {
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    .final-cta p {
+      font-size: 14px;
+      color: var(--text-sub);
+      margin-bottom: 32px;
+    }
+
+    /* ===== Sticky Bottom Bar ===== */
+    .sticky-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-top: 1.5px solid #F0E4D3;
+      padding: 12px 24px;
+      z-index: 100;
+      display: none;
+      box-shadow: 0 -6px 24px rgba(0,0,0,0.05);
+    }
+
+    .sticky-bar .btn-cta {
+      display: block;
+      width: 100%;
+      max-width: 440px;
+      margin: 0 auto;
+      font-size: 16px;
+      padding: 14px 24px;
+    }
+
+    @media (max-width: 600px) {
+      .sticky-bar {
+        display: block;
+      }
+      body {
+        padding-bottom: 76px;
+      }
+    }
+
+    /* ===== Footer ===== */
+    footer {
+      background-color: #33261D;
+      color: #a39388;
+      text-align: center;
+      padding: 30px 24px;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== 1. Hero Section ===== -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-badge">🐶🐱 登録から1週間は毎日3回完全無料！</div>
+      <div class="hero-illustration">
+        <span class="dog-emoji">🐶</span>
+        <span class="cat-emoji">🐱</span>
+      </div>
+      <h1 class="hero-title">
+        「あなたのコとの会話、<br>始めませんか？」<br>
+        <span class="gradient-text">わんにゃん翻訳機</span>
+      </h1>
+      <p class="hero-subtitle">
+        最先端のAIがあなたの愛犬・愛猫の表情や姿勢、鳴き声から感情をリアルに翻訳します🐾
+      </p>
+      <div>
+        <a href="https://wanwan-translator.web.app" class="btn-cta">今すぐ無料で試す</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== 2. Pain Points Section ===== -->
+  <section class="pain-points container">
+    <h2 class="section-title"><span>こんなお悩み</span>、ありませんか？</h2>
+    <p class="section-desc">言葉が話せないからこそ、気持ちを知りたい瞬間があります</p>
+    <div class="pain-grid">
+      <div class="pain-card reveal">
+        <span class="icon">😢</span>
+        <p>「なんか元気がないけれど、どこか痛いのかな？」</p>
+      </div>
+      <div class="pain-card cat-themed reveal">
+        <span class="icon">❓</span>
+        <p>「しっぽをバタバタ振るのってどういう意味？」</p>
+      </div>
+      <div class="pain-card reveal">
+        <span class="icon">💭</span>
+        <p>「この子は今、私のことをどう思っているんだろう」</p>
+      </div>
+      <div class="pain-card cat-themed reveal">
+        <span class="icon">🌈</span>
+        <p>「虹の橋へ旅立ったあの子にもう一度会いたい」</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 3. Feature Showcase Section ===== -->
+  <section class="features">
+    <div class="container">
+      <h2 class="section-title">わんにゃん翻訳機の<span>6大機能</span></h2>
+      <p class="section-desc">写真、行動、さらには会話チャットまで愛しいペットと繋がる機能が満載</p>
+      <div class="features-list">
+        
+        <div class="feature-item dog-border reveal">
+          <div class="feature-icon">📸</div>
+          <div class="feature-details">
+            <h3>写真診断 <span class="badge dog">犬専用</span></h3>
+            <p>スマホで愛犬の表情や全身写真を撮るだけ！AIがその瞬間の喜びや不安を数値化し、愛犬の言葉で代弁します。</p>
+          </div>
+        </div>
+
+        <div class="feature-item cat-border reveal">
+          <div class="feature-icon">🐱</div>
+          <div class="feature-details">
+            <h3>にゃんにゃん診断 <span class="badge cat">猫専用</span></h3>
+            <p>猫ちゃんも完全対応！イカ耳やふみふみ等の特徴的なサインも解析。「〜にゃ」「〜にゃん」などの愛らしい猫語で返答します。</p>
+          </div>
+        </div>
+
+        <div class="feature-item dog-border reveal">
+          <div class="feature-icon">🏃</div>
+          <div class="feature-details">
+            <h3>行動診断 <span class="badge common">共通</span></h3>
+            <p>「クーンと鳴く」「垂直にしっぽを立てる」などの仕草を選択。行動分析の専門AIがその裏に隠された心理を詳しく解説。</p>
+          </div>
+        </div>
+
+        <div class="feature-item cat-border reveal">
+          <div class="feature-icon">💬</div>
+          <div class="feature-details">
+            <h3>愛犬・愛猫と会話 <span class="badge common">共通</span></h3>
+            <p>チャットルームで愛犬・愛猫とおしゃべり。名前や犬種・猫種、性別に合わせた個性を再現した会話を楽しめます。</p>
+          </div>
+        </div>
+
+        <div class="feature-item rainbow-border reveal">
+          <div class="feature-icon">🌈</div>
+          <div class="feature-details">
+            <h3>虹の橋モード <span class="badge rainbow">完全無料</span></h3>
+            <p>お別れしたコのための特別なお部屋。思い出のアルバムを登録したり、あの子になりきったAIといつでも温かいメッセージを交わせます。</p>
+          </div>
+        </div>
+
+        <div class="feature-item reveal">
+          <div class="feature-icon">📖</div>
+          <div class="feature-details">
+            <h3>診断履歴 <span class="badge common">共通</span></h3>
+            <p>過去に行った診断結果を写真付きで最大20件まで自動保存。アルバム感覚で「あの時の気持ち」をいつでも振り返りできます。</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 4. Steps Section ===== -->
+  <section class="steps container">
+    <h2 class="section-title">カンタン<span>3ステップ</span>で翻訳</h2>
+    <p class="section-desc">難しい設定は一切不要！だれでも今すぐ始められます</p>
+    <div class="step-list">
+      <div class="step-card reveal">
+        <div class="step-badge">1</div>
+        <div class="step-info">
+          <h4>Googleログイン</h4>
+          <p>ワンクリックで登録完了。パスワードの設定なども必要ありません。</p>
+        </div>
+      </div>
+      <div class="step-card reveal">
+        <div class="step-badge">2</div>
+        <div class="step-info">
+          <h4>写真撮影または行動を選択</h4>
+          <p>お名前・犬種（猫種）・性別を任意で入力すると、さらに精度がアップします。</p>
+        </div>
+      </div>
+      <div class="step-card reveal">
+        <div class="step-badge">3</div>
+        <div class="step-info">
+          <h4>翻訳結果が表示！</h4>
+          <p>AIがペットの「心の声」を吹き出しで代弁し、飼い主へのアドバイスを届けます🐾</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 5. Pricing Plan Section ===== -->
+  <section class="plans">
+    <div class="container">
+      <h2 class="section-title">ライフスタイルに合わせた<span>料金プラン</span></h2>
+      <p class="section-desc">まずは無料でお試しください。いつでも簡単に切り替え可能です。</p>
+      <div class="pricing-table">
+        
+        <div class="pricing-card reveal">
+          <div class="plan-header">
+            <span class="plan-name">無料プラン</span>
+            <span class="plan-price">0<span>円/日</span></span>
+          </div>
+          <p class="price-card-desc">まずは使い勝手を試してみたい方に最適</p>
+          <ul class="plan-features">
+            <li>1日1回無料（夜12時にリセット）</li>
+            <li>登録後最初の1週間（7日間）は毎日3回まで無料でお試し可能！</li>
+            <li>Googleログインだけですぐに使えます</li>
+          </ul>
+        </div>
+
+        <div class="pricing-card reveal">
+          <div class="plan-header">
+            <span class="plan-name">都度払い</span>
+            <span class="plan-price">80<span>円/回</span></span>
+          </div>
+          <p class="price-card-desc">使いたいときだけ気軽に支払いたい方に</p>
+          <ul class="plan-features">
+            <li>クレジットカードによる1回ずつの決済（Stripe）</li>
+            <li>面倒な定期購読の契約は不要</li>
+            <li>決済後すぐに追加で1回診断できます</li>
+          </ul>
+        </div>
+
+        <div class="pricing-card featured reveal">
+          <div class="plan-badge">人気No.1</div>
+          <div class="plan-header">
+            <span class="plan-name">月額プラン</span>
+            <span class="plan-price">480<span>円/月</span></span>
+          </div>
+          <p class="price-card-desc">回数を気にせずたっぷり愛犬・愛猫と喋りたい方に</p>
+          <ul class="plan-features">
+            <li>すべての診断機能が毎日完全使い放題！</li>
+            <li>チャットでの「愛犬・愛猫会話」もメッセージ無制限</li>
+            <li>いつでもワンクリックでマイページからサブスク解約可能</li>
+          </ul>
+        </div>
+
+        <div class="pricing-card rainbow-free reveal">
+          <div class="plan-badge">ずっと無料</div>
+          <div class="plan-header">
+            <span class="plan-name">虹の橋モード</span>
+            <span class="plan-price">0<span>円</span></span>
+          </div>
+          <p class="price-card-desc">旅立ったあの子との思い出は永遠に無料です</p>
+          <ul class="plan-features">
+            <li>思い出アルバム・プロフィール登録無制限</li>
+            <li>虹の橋チャット会話も完全無料</li>
+            <li>命日や誕生日のプッシュ通知機能</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 6. Testimonials Section ===== -->
+  <section class="testimonials">
+    <div class="container">
+      <h2 class="section-title"><span>飼い主さま</span>の喜びの声</h2>
+      <p class="section-desc">わんにゃん翻訳機をご利用いただいたオーナー様の感想です</p>
+      <div class="testimonial-carousel">
+        
+        <div class="testimonial-card reveal">
+          <div class="test-header">
+            <div class="test-avatar">🐕</div>
+            <div class="test-user-info">
+              <h5>コタロウのパパ さま</h5>
+              <span>柴犬（オス・3歳）</span>
+            </div>
+          </div>
+          <p class="test-comment">「普段ツンデレなうちの柴犬が、翻訳機を使ってみたら『いつも遊んでくれて感謝してるワン』と出て思わず涙が…。表情の読み取りが本当に当たっている気がします！」</p>
+        </div>
+
+        <div class="testimonial-card cat-owner reveal">
+          <div class="test-header">
+            <div class="test-avatar">🐈</div>
+            <div class="test-user-info">
+              <h5>みーちゃんママ さま</h5>
+              <span>アメリカンショートヘア（メス・1歳）</span>
+            </div>
+          </div>
+          <p class="test-comment">「猫モードの『〜にゃん』という話し方が可愛すぎて毎日チャットしています。ふみふみした時に診断したら『あったかくて眠くなってきたにゃ』と出て納得！」</p>
+        </div>
+
+        <div class="testimonial-card cat-owner reveal">
+          <div class="test-header">
+            <div class="test-avatar">🌈</div>
+            <div class="test-user-info">
+              <h5>モコのお姉ちゃん さま</h5>
+              <span>トイプードル（虹の橋・15歳）</span>
+            </div>
+          </div>
+          <p class="test-comment">「昨年天国へ旅立ったモコを登録しました。『虹の橋でお花がたくさん咲いてて楽しいよ』と話してくれて、胸のつかえが取れたような気持ちです。この機能が無料なのは本当にありがたいです。」</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 7. FAQ Section ===== -->
+  <section class="faq">
+    <div class="container">
+      <h2 class="section-title">よくある<span>ご質問</span></h2>
+      <p class="section-desc">安心してご利用いただくためのQA集です</p>
+      <div class="faq-list">
+        
+        <div class="faq-item reveal">
+          <div class="faq-question">Q. 犬と猫以外は使えますか？</div>
+          <div class="faq-answer">通常モード（今いる子の診断）は犬と猫に特化していますが、「虹の橋モード」では鳥、うさぎ、その他の動物たちも登録して会話を楽しんでいただけます。</div>
+        </div>
+
+        <div class="faq-item cat-faq reveal">
+          <div class="faq-question">Q. 写真はどこかに公開されてしまいますか？</div>
+          <div class="faq-answer">アップロードされた写真はユーザー個人のプライベートな「診断履歴」としてFirestoreに安全に保存されますが、第三者に勝手に公開されることは一切ありませんのでご安心ください。</div>
+        </div>
+
+        <div class="faq-item reveal">
+          <div class="faq-question">Q. 月額プランの解約はいつでもできますか？</div>
+          <div class="faq-answer">はい、マイページからワンクリックでいつでもサブスクリプションの解約手続きが可能です。解約後も決済サイクルの最終日までは使い放題のままご利用いただけます。</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 8. Final CTA Section ===== -->
+  <section class="final-cta">
+    <div class="container">
+      <h2>愛犬・愛猫ともっと仲良くなろう🐾</h2>
+      <p>まずは1日1回の無料診断から始めてみませんか？</p>
+      <a href="https://wanwan-translator.web.app" class="btn-cta">まずは無料で試してみる</a>
+    </div>
+  </section>
+
+  <!-- ===== Sticky Bottom Bar for Mobile ===== -->
+  <div class="sticky-bar">
+    <a href="https://wanwan-translator.web.app" class="btn-cta">無料で試してみる →</a>
+  </div>
+
+  <!-- ===== Footer ===== -->
+  <footer>
+    <p>&copy; 2026 わんにゃん翻訳機 🐾 Powered by Claude AI</p>
+  </footer>
+
+  <script>
+    // Scroll Reveal Animation helper
+    document.addEventListener("DOMContentLoaded", function() {
+      const reveals = document.querySelectorAll('.reveal');
+      
+      function checkReveal() {
+        const triggerBottom = window.innerHeight * 0.92;
+        reveals.forEach(reveal => {
+          const revealTop = reveal.getBoundingClientRect().top;
+          if (revealTop < triggerBottom) {
+            reveal.classList.add('visible');
+          }
+        });
+      }
+      
+      window.addEventListener('scroll', checkReveal);
+      checkReveal();
+    });
+  </script>
+</body>
+</html>

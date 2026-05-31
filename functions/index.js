@@ -492,6 +492,51 @@ exports.stripeWebhook = onRequest(
         });
       }
 
+      // ─── customer.subscription.created / updated: サブスクリプション作成・更新フォールバック ───
+      else if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
+        const obj = event.data.object;
+        const uid = obj.metadata?.uid;
+        const plan = obj.metadata?.plan || "monthly";
+
+        console.log(`${event.type}: uid=${uid}, plan=${plan}, subscriptionId=${obj.id}, status=${obj.status}`);
+
+        if (uid && plan === "monthly" && obj.status === "active") {
+          const userRef = db.collection("users").doc(uid);
+          const eventRef = db.collection("stripeEvents").doc(event.id);
+
+          await db.runTransaction(async (t) => {
+            const eventSnap = await t.get(eventRef);
+            if (eventSnap.exists) {
+              console.log(`Event ${event.id} already processed.`);
+              return;
+            }
+
+            const expiry = new Date();
+            expiry.setDate(expiry.getDate() + 30);
+
+            t.set(eventRef, {
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              uid,
+              plan: "monthly",
+              eventType: event.type
+            });
+
+            t.set(userRef, {
+              monthlyPlanActive: true,
+              monthlyPlanExpiry: admin.firestore.Timestamp.fromDate(expiry),
+              lastPaymentAt: admin.firestore.FieldValue.serverTimestamp(),
+              stripeSubscriptionId: obj.id,
+              subscriptionStatus: "active",
+              subscriptionPlan: "monthly",
+              monthlyCount: 0,
+              monthlyLimit: 100,
+            }, { merge: true });
+
+            console.log(`Monthly plan activated/updated via ${event.type} for uid: ${uid}, expires: ${expiry.toISOString()}`);
+          });
+        }
+      }
+
       // ─── customer.subscription.deleted: サブスクリプションキャンセル ───────────
       else if (event.type === "customer.subscription.deleted") {
         const obj = event.data.object;

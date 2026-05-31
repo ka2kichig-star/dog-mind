@@ -939,6 +939,41 @@
       opacity: 0.6;
     }
 
+    .ticket-badge-card.monthly {
+      background: linear-gradient(135deg, #a084ca, #ff85a1);
+      box-shadow: 0 8px 24px rgba(160, 132, 202, 0.4);
+      border-color: #fff;
+      animation: slideDown 0.3s ease-out, badgePulse 2s infinite alternate;
+    }
+
+    @keyframes badgePulse {
+      0% { transform: translate(-50%, 0) scale(1); }
+      100% { transform: translate(-50%, 0) scale(1.03); }
+    }
+
+    .usage-badge.monthly-active {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: linear-gradient(135deg, #f3e8ff, #ffe4e6);
+      color: #7c3aed;
+      border: 1.5px solid #d8b4fe;
+      border-radius: 30px;
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.12);
+      margin: 8px auto 16px auto;
+      min-height: auto;
+      animation: pulseBadgeIn 2s infinite alternate;
+    }
+    
+    @keyframes pulseBadgeIn {
+      0% { transform: scale(1); box-shadow: 0 4px 12px rgba(124, 58, 237, 0.12); }
+      100% { transform: scale(1.03); box-shadow: 0 6px 16px rgba(124, 58, 237, 0.2); }
+    }
+
     .ticket-badge-card .ticket-label-container {
       display: flex;
       align-items: center;
@@ -2489,13 +2524,16 @@
         return;
       }
       
-      if (isMonthlyActive && (monthlyLimit - monthlyCount) > 0) {
-        val.textContent = monthlyLimit - monthlyCount;
-        if (label) label.textContent = '今月あと';
+      if (isMonthlyActive) {
+        card.classList.add('monthly');
+        card.classList.remove('zero');
+        const remaining = Math.max(0, monthlyLimit - monthlyCount);
+        val.textContent = remaining;
+        if (label) label.textContent = '💜 月額プラン 残り';
         if (unit) unit.textContent = '回';
         card.style.display = 'flex';
-        card.classList.remove('zero');
       } else {
+        card.classList.remove('monthly');
         val.textContent = credits;
         if (label) label.textContent = '追加診断チケット';
         if (unit) unit.textContent = '枚';
@@ -2578,21 +2616,25 @@
         const isTrialPeriod = diffDays <= 7;
 
         if (isMonthlyActive) {
-          const remaining = monthlyLimit - monthlyCount;
+          const remaining = Math.max(0, monthlyLimit - monthlyCount);
+          badge.classList.add('monthly-active');
           if (remaining > 0) {
-            badge.textContent = `💜 月額プラン｜今月あと${remaining}回診断できます（今日${todayCount}回診断済み）`;
+            badge.textContent = `💜 月額プラン｜今月あと${remaining}回（今日${todayCount}回診断）`;
           } else {
-            badge.textContent = `⚠️ 月額プランの上限（${monthlyLimit}回）に達しました｜追加診断には都度払い（80円/回）をご利用ください`;
+            badge.textContent = `⚠️ 月額プランの上限（${monthlyLimit}回）に達しました｜追加診断チケットをご利用ください`;
           }
-        } else if (perUseCredits > 0) {
-          badge.textContent = `✅ 追加診断チケットがあります（残り${perUseCredits}回）🐾`;
-        } else if (isTrialPeriod) {
-          const remainingDays = 8 - diffDays;
-          badge.textContent = todayCount < 3
-            ? `🎉 お試し期間（あと${remainingDays}日）｜今日はあと${3 - todayCount}回無料診断できます！`
-            : `今日${todayCount}回診断済み｜次回から80円（お試し残${remainingDays}日）`;
         } else {
-          badge.textContent = '⚠️ お試し期間（1週間）が終了しました｜診断には80円が必要です';
+          badge.classList.remove('monthly-active');
+          if (perUseCredits > 0) {
+            badge.textContent = `✅ 追加診断チケットがあります（残り${perUseCredits}回）🐾`;
+          } else if (isTrialPeriod) {
+            const remainingDays = 8 - diffDays;
+            badge.textContent = todayCount < 3
+              ? `🎉 お試し期間（あと${remainingDays}日）｜今日はあと${3 - todayCount}回無料診断できます！`
+              : `今日${todayCount}回診断済み｜次回から80円（お試し残${remainingDays}日）`;
+          } else {
+            badge.textContent = '⚠️ お試し期間（1週間）が終了しました｜診断には80円が必要です';
+          }
         }
 
         // ペット一覧のロード（虹の橋）
@@ -2602,6 +2644,7 @@
         checkAnniversary(user);
       } else {
         banner.style.display = 'block';
+        badge.classList.remove('monthly-active');
         badge.textContent = '';
         window._currentUser = null;
         if (logoutBtn) logoutBtn.style.display = 'none';
@@ -3818,14 +3861,135 @@
       // Stripe決済完了後のリダイレクト処理
       if (params.get('stripe') === 'success') {
         const plan = params.get('plan') || 'monthly';
+        const uid = params.get('uid');
         window.history.replaceState({}, '', window.location.pathname);
-        setTimeout(() => {
+        
+        setTimeout(async () => {
           if (plan === 'monthly') {
-            document.getElementById('usage-badge').textContent = '💜 月額プラン有効！使い放題です';
-            alert('月額プランへのご加入ありがとうございます！\n今日から使い放題です 🎉');
+            const badge = document.getElementById('usage-badge');
+            if (badge) {
+              badge.textContent = '🔄 決済処理の完了を確認しています...（数秒かかります）';
+              badge.classList.add('monthly-active');
+            }
+            
+            // 最大10回、1.5秒おきにFirestoreを確認（約15秒間）
+            let attempts = 0;
+            const maxAttempts = 10;
+            const checkInterval = 1500;
+            
+            const checkSubscription = async () => {
+              const currentUser = auth.currentUser || (uid ? { uid } : null);
+              if (!currentUser) {
+                // ログイン状態がまだ確立していない場合は1秒待って再試行
+                attempts++;
+                if (attempts < maxAttempts) {
+                  setTimeout(checkSubscription, checkInterval);
+                } else {
+                  showTimeoutMessage();
+                }
+                return;
+              }
+              
+              try {
+                const ref = doc(db, 'users', currentUser.uid);
+                const snap = await getDoc(ref);
+                if (snap.exists()) {
+                  const data = snap.data();
+                  let isMonthlyActive = false;
+                  if ((data.monthlyPlanActive || data.subscriptionStatus === "active") && data.monthlyPlanExpiry) {
+                    const expiry = data.monthlyPlanExpiry?.toDate ? data.monthlyPlanExpiry.toDate() : null;
+                    isMonthlyActive = expiry && expiry > new Date();
+                  }
+                  
+                  if (isMonthlyActive) {
+                    // 反映完了！
+                    const monthlyLimit = data.monthlyLimit || 100;
+                    const monthlyCount = data.monthlyCount || 0;
+                    const remaining = Math.max(0, monthlyLimit - monthlyCount);
+                    const todayCount = data.todayCount || 0;
+                    
+                    if (badge) {
+                      badge.textContent = `💜 月額プラン｜今月あと${remaining}回（今日${todayCount}回診断）`;
+                    }
+                    window.updateTicketBadgeUI(data.perUseCredits || 0, true, monthlyCount, monthlyLimit);
+                    alert('月額プランへのご加入ありがとうございます！\n今日から使い放題です 🎉');
+                    return;
+                  }
+                }
+              } catch (e) {
+                console.error("Error checking subscription status:", e);
+              }
+              
+              attempts++;
+              if (attempts < maxAttempts) {
+                setTimeout(checkSubscription, checkInterval);
+              } else {
+                showTimeoutMessage();
+              }
+            };
+            
+            const showTimeoutMessage = () => {
+              if (badge) {
+                badge.textContent = '⚠️ 決済情報の反映に時間がかかっています。しばらく経ってからページを再読み込みしてください。';
+              }
+              alert('決済完了のお手続きがStripe側で処理中です。\n反映まで最大1分程度かかる場合があります。このまましばらくお待ちいただくか、再度ページを読み込んでみてください。');
+            };
+            
+            // 開始
+            checkSubscription();
+            
           } else {
-            document.getElementById('usage-badge').textContent = '✅ お支払い完了！追加診断できます 🐾';
-            alert('追加診断のお支払いが完了しました！\n診断をお試しください 🐾');
+            // 都度払いプランのポーリング
+            const badge = document.getElementById('usage-badge');
+            if (badge) {
+              badge.textContent = '🔄 お支払いの反映を確認しています...';
+            }
+            
+            let attempts = 0;
+            const maxAttempts = 8;
+            const checkInterval = 1500;
+            
+            const checkCredits = async () => {
+              const currentUser = auth.currentUser || (uid ? { uid } : null);
+              if (!currentUser) {
+                attempts++;
+                if (attempts < maxAttempts) {
+                  setTimeout(checkCredits, checkInterval);
+                }
+                return;
+              }
+              
+              try {
+                const ref = doc(db, 'users', currentUser.uid);
+                const snap = await getDoc(ref);
+                if (snap.exists()) {
+                  const data = snap.data();
+                  const perUseCredits = data.perUseCredits || 0;
+                  if (perUseCredits > 0) {
+                    if (badge) {
+                      badge.textContent = `✅ 追加診断チケットがあります（残り${perUseCredits}回）🐾`;
+                    }
+                    window.updateTicketBadgeUI(perUseCredits, false, 0, 100);
+                    alert('追加診断のお支払いが完了しました！\n診断をお試しください 🐾');
+                    return;
+                  }
+                }
+              } catch (e) {
+                console.error("Error checking credits status:", e);
+              }
+              
+              attempts++;
+              if (attempts < maxAttempts) {
+                setTimeout(checkCredits, checkInterval);
+              } else {
+                if (badge) {
+                  badge.textContent = '⚠️ チケットの反映に時間がかかっています。反映されない場合はリロードしてください。';
+                }
+                alert('お支払いの反映に時間がかかっています。\n反映までしばらくお待ちいただくか、ページを再読み込みしてください。');
+              }
+            };
+            
+            checkCredits();
           }
         }, 500);
       }

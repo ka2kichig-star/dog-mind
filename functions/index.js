@@ -202,6 +202,24 @@ exports.createStripeSession = onRequest(
         },
       };
 
+      if (mode === "payment") {
+        sessionParams.payment_intent_data = {
+          metadata: {
+            uid,
+            plan: plan || "monthly",
+          }
+        };
+      }
+
+      if (mode === "subscription") {
+        sessionParams.subscription_data = {
+          metadata: {
+            uid,
+            plan: plan || "monthly",
+          }
+        };
+      }
+
       const session = await stripe.checkout.sessions.create(sessionParams);
 
       console.log(`Stripe session created: ${session.id}, plan: ${plan}, uid: ${uid}`);
@@ -231,12 +249,33 @@ exports.stripeWebhook = onRequest(
 
       let event = req.body;
       const signature = req.headers["stripe-signature"];
-      const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || (typeof stripeWebhookSecret !== "undefined" ? stripeWebhookSecret.value() : "");
+      let webhookSecret = "";
 
-      if (signature && webhookSecret) {
+      try {
+        const functionsInstance = require("firebase-functions");
+        if (functionsInstance.config() && functionsInstance.config().stripe && functionsInstance.config().stripe.webhook_secret) {
+          webhookSecret = functionsInstance.config().stripe.webhook_secret;
+          console.log("Loaded webhookSecret from functions.config().stripe.webhook_secret");
+        }
+      } catch (configErr) {
+        // Ignored in v2
+      }
+
+      if (!webhookSecret) {
+        webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || (typeof stripeWebhookSecret !== "undefined" ? stripeWebhookSecret.value() : "");
+        if (webhookSecret) {
+          console.log("Loaded webhookSecret from process.env / Secret Manager");
+        }
+      }
+
+      const trimmedSecret = (webhookSecret || "").trim();
+      console.log(`webhookSecret length (trimmed): ${trimmedSecret.length}`);
+      console.log(`stripe-signature header exists: ${!!signature}`);
+
+      if (signature && trimmedSecret) {
         try {
           // Verify webhook signature (req.rawBody contains the buffer)
-          event = stripe.webhooks.constructEvent(req.rawBody, signature, webhookSecret.trim());
+          event = stripe.webhooks.constructEvent(req.rawBody, signature, trimmedSecret);
           console.log(`Stripe Webhook signature verified successfully. Event: ${event.type}`);
         } catch (err) {
           console.error("Webhook signature verification failed:", err.message);
@@ -244,13 +283,16 @@ exports.stripeWebhook = onRequest(
           return;
         }
       } else {
-        console.log(`Stripe Webhook received directly without signature verification. Event: ${event.type}`);
+        console.log(`Stripe Webhook signature verification bypassed. Signature: ${!!signature}, Secret: ${!!trimmedSecret}`);
       }
 
-      if (event.type === "checkout.session.completed" || event.type === "payment_intent.succeeded") {
+      // ─── checkout.session.completed: 初回決済完了 ───────────────────────────
+      if (event.type === "checkout.session.completed") {
         const obj = event.data.object;
         const uid = obj.client_reference_id || obj.metadata?.uid;
-        const plan = obj.metadata?.plan || "monthly";
+        const plan = obj.metadata?.plan || (obj.mode === "subscription" ? "monthly" : "peruse");
+
+        console.log(`checkout.session.completed: uid=${uid}, plan=${plan}, mode=${obj.mode}, subscriptionId=${obj.subscription}`);
 
         if (!uid) {
           console.warn("No uid in Stripe webhook event metadata or client_reference_id");
@@ -263,12 +305,16 @@ exports.stripeWebhook = onRequest(
 
         await db.runTransaction(async (t) => {
           const eventSnap = await t.get(eventRef);
+          let userSnap = null;
+          if (plan !== "monthly") {
+            userSnap = await t.get(userRef);
+          }
+
           if (eventSnap.exists) {
             console.log(`Event ${event.id} already processed.`);
             return;
           }
 
-          // Mark event as processed
           t.set(eventRef, {
             processedAt: admin.firestore.FieldValue.serverTimestamp(),
             uid,
@@ -289,11 +335,10 @@ exports.stripeWebhook = onRequest(
               stripeSubscriptionId: obj.subscription || null,
             }, { merge: true });
 
-            console.log(`Monthly plan activated for uid: ${uid}, expires: ${expiry.toISOString()}`);
+            console.log(`Monthly plan activated for uid: ${uid}, subscriptionId: ${obj.subscription}, expires: ${expiry.toISOString()}`);
           } else {
             // 都度払い：クレジット（perUseCredits）を+1
-            const userSnap = await t.get(userRef);
-            if (userSnap.exists) {
+            if (userSnap && userSnap.exists) {
               const data = userSnap.data();
               const currentCredits = data.perUseCredits || 0;
               t.update(userRef, {
@@ -314,10 +359,214 @@ exports.stripeWebhook = onRequest(
         });
       }
 
+      // ─── payment_intent.succeeded: 都度払いのフォールバック ───────────────────
+      else if (event.type === "payment_intent.succeeded") {
+        const obj = event.data.object;
+        const uid = obj.metadata?.uid;
+        const plan = obj.metadata?.plan || "peruse";
+
+        console.log(`payment_intent.succeeded: uid=${uid}, plan=${plan}`);
+
+        if (!uid || plan === "monthly") {
+          // 月額はcheckout.session.completedで処理済み or uidなし
+          res.status(200).send("OK");
+          return;
+        }
+
+        const eventRef = db.collection("stripeEvents").doc(event.id);
+        const userRef = db.collection("users").doc(uid);
+
+        await db.runTransaction(async (t) => {
+          const eventSnap = await t.get(eventRef);
+          const userSnap = await t.get(userRef);
+
+          if (eventSnap.exists) {
+            console.log(`Event ${event.id} already processed.`);
+            return;
+          }
+
+          t.set(eventRef, {
+            processedAt: admin.firestore.FieldValue.serverTimestamp(),
+            uid,
+            plan,
+            eventType: event.type
+          });
+
+          if (userSnap.exists) {
+            const data = userSnap.data();
+            const currentCredits = data.perUseCredits || 0;
+            t.update(userRef, {
+              perUseCredits: currentCredits + 1,
+              lastPaymentAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          } else {
+            t.set(userRef, {
+              perUseCredits: 1,
+              todayCount: 0,
+              usageCount: 0,
+              registeredAt: admin.firestore.FieldValue.serverTimestamp(),
+              lastPaymentAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          }
+          console.log(`Per-use payment (+1 credit) via payment_intent for uid: ${uid}`);
+        });
+      }
+
+      // ─── invoice.payment_succeeded: 月額サブスクリプション継続更新 ─────────────
+      else if (event.type === "invoice.payment_succeeded") {
+        const obj = event.data.object;
+        const subscriptionId = obj.subscription;
+        const customerId = obj.customer;
+
+        console.log(`invoice.payment_succeeded: subscriptionId=${subscriptionId}, customerId=${customerId}, billing_reason=${obj.billing_reason}`);
+
+        if (!subscriptionId) {
+          res.status(200).send("OK");
+          return;
+        }
+
+        let uid = null;
+
+        // stripeSubscriptionId でユーザーを検索
+        const usersSnap = await db.collection("users")
+          .where("stripeSubscriptionId", "==", subscriptionId)
+          .limit(1)
+          .get();
+
+        if (!usersSnap.empty) {
+          uid = usersSnap.docs[0].id;
+        } else {
+          // Stripe API からサブスクリプション情報を取得して metadata.uid を確認
+          try {
+            const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+            uid = subscription.metadata?.uid;
+            console.log(`Retrieved uid from Stripe subscription metadata: ${uid}`);
+          } catch (err) {
+            console.error("Failed to retrieve subscription from Stripe:", err.message);
+          }
+        }
+
+        if (!uid) {
+          console.warn(`No user found or resolved for subscriptionId: ${subscriptionId}`);
+          res.status(200).send("OK");
+          return;
+        }
+
+        const userRef = db.collection("users").doc(uid);
+        const eventRef = db.collection("stripeEvents").doc(event.id);
+
+        await db.runTransaction(async (t) => {
+          const eventSnap = await t.get(eventRef);
+          if (eventSnap.exists) {
+            console.log(`Event ${event.id} already processed.`);
+            return;
+          }
+
+          // 有効期限を30日延長
+          const expiry = new Date();
+          expiry.setDate(expiry.getDate() + 30);
+
+          t.set(eventRef, {
+            processedAt: admin.firestore.FieldValue.serverTimestamp(),
+            uid,
+            plan: "monthly",
+            eventType: event.type
+          });
+
+          t.set(userRef, {
+            monthlyPlanActive: true,
+            monthlyPlanExpiry: admin.firestore.Timestamp.fromDate(expiry),
+            lastPaymentAt: admin.firestore.FieldValue.serverTimestamp(),
+            stripeSubscriptionId: subscriptionId, // 存在しない場合に備えて保存
+          }, { merge: true });
+
+          console.log(`Monthly plan active/renewed for uid: ${uid}, expires: ${expiry.toISOString()}`);
+        });
+      }
+
+      // ─── customer.subscription.deleted: サブスクリプションキャンセル ───────────
+      else if (event.type === "customer.subscription.deleted") {
+        const obj = event.data.object;
+        const subscriptionId = obj.id;
+
+        console.log(`customer.subscription.deleted: subscriptionId=${subscriptionId}`);
+
+        const usersSnap = await db.collection("users")
+          .where("stripeSubscriptionId", "==", subscriptionId)
+          .limit(1)
+          .get();
+
+        if (!usersSnap.empty) {
+          const userDoc = usersSnap.docs[0];
+          await db.collection("users").doc(userDoc.id).set({
+            monthlyPlanActive: false,
+          }, { merge: true });
+          console.log(`Monthly plan cancelled for uid: ${userDoc.id}`);
+        }
+      }
+
       res.status(200).send("OK");
     } catch (err) {
       console.error("stripeWebhook error:", err);
       res.status(200).send("OK"); // Stripe には常に200を返す
+    }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 7. cancelStripeSubscription — Stripe サブスクリプション期末解約
+// ═══════════════════════════════════════════════════════════════════════════════
+exports.cancelStripeSubscription = onRequest(
+  {
+    secrets: [stripeSecretKey],
+    cors: true,
+    region: "asia-northeast1",
+    invoker: "public",
+  },
+  async (req, res) => {
+    setCors(res);
+    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+
+    try {
+      const decoded = await verifyToken(req);
+      const uid = decoded.uid;
+
+      // FirestoreからユーザーのstripeSubscriptionIdを取得
+      const userRef = db.collection("users").doc(uid);
+      const userSnap = await userRef.get();
+      if (!userSnap.exists) {
+        res.status(404).json({ error: "User not found" });
+        return;
+      }
+
+      const userData = userSnap.data();
+      const subscriptionId = userData.stripeSubscriptionId;
+
+      if (!subscriptionId) {
+        res.status(400).json({ error: "No active subscription found for this user" });
+        return;
+      }
+
+      // Stripe SDK 初期化
+      const Stripe = require("stripe");
+      const stripe = new Stripe(stripeSecretKey.value().trim(), { apiVersion: "2024-06-20" });
+
+      // Stripeサブスクリプションを期末に解約（cancel_at_period_end: true）
+      const subscription = await stripe.subscriptions.update(subscriptionId, {
+        cancel_at_period_end: true,
+      });
+
+      // Firestoreのサブスクリプションキャンセル予約状態を更新
+      await userRef.set({
+        monthlyPlanCancelScheduled: true,
+      }, { merge: true });
+
+      console.log(`Stripe subscription cancel scheduled at period end: ${subscriptionId} for uid: ${uid}`);
+      res.json({ success: true, message: "Subscription cancel scheduled successfully." });
+    } catch (err) {
+      console.error("cancelStripeSubscription error:", err);
+      res.status(500).json({ error: err.message });
     }
   }
 );

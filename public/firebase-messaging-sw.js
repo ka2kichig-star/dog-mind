@@ -4,7 +4,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-comp
 
 firebase.initializeApp({
   apiKey: "AIzaSyBio-wwXDiPKYQ5mPiqE98bwakOKl1UPvo",
-  authDomain: "wanwan-translator.firebaseapp.com",
+  authDomain: "wanwan-translator.web.app",
   projectId: "wanwan-translator",
   storageBucket: "wanwan-translator.firebasestorage.app",
   messagingSenderId: "1060567209218",

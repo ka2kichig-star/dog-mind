@@ -244,6 +244,32 @@
       background: #7c5cbf;
     }
 
+    /* ===== Floating Cancel Button ===== */
+    .floating-cancel-btn {
+      position: fixed;
+      top: 12px;
+      right: 124px;
+      z-index: 100;
+      background: #7c5cbf;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(124, 92, 191, 0.25);
+      display: none;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .floating-cancel-btn:hover {
+      background: #5b3f7e;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(91, 63, 126, 0.35);
+    }
+
     /* ===== Floating Logout Button ===== */
     .floating-logout-btn {
       position: fixed;
@@ -1826,6 +1852,9 @@
   <!-- アプリ紹介への固定ボタン -->
   <a href="/lp.html" class="floating-info-btn">🏠 アプリ紹介</a>
 
+  <!-- 解約固定ボタン -->
+  <a href="/cancel.html" id="cancel-menu-btn" class="floating-cancel-btn" style="display: none;">💳 解約</a>
+
   <!-- ログアウト固定ボタン -->
   <button id="logout-btn" class="floating-logout-btn" onclick="logoutWithFirebase()">🚪 ログアウト</button>
 
@@ -1835,15 +1864,26 @@
   <div id="ticket-badge-card" class="ticket-badge-card" style="display: none;">
     <div class="ticket-label-container">
       <span>🎫</span>
-      <span>追加診断チケット</span>
+      <span id="ticket-label-text">追加診断チケット</span>
     </div>
     <div class="ticket-count-big" id="ticket-count-val">0</div>
     <div class="ticket-unit">枚</div>
   </div>
 
   <!-- ログインバナー -->
-  <div class="login-banner" id="login-banner" onclick="loginWithGoogle()" style="display:none">
-    🐶 Googleログインで初回3回無料診断！タップしてログイン
+  <div class="login-banner" id="login-banner" style="display:none">
+    <div onclick="loginWithGoogle()" style="cursor: pointer; padding: 4px 0;">
+      🐶 Googleログインで初回3回無料診断！タップしてログイン
+    </div>
+    <div style="margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: normal;">
+      <input type="checkbox" id="terms-checkbox" style="cursor: pointer;" onclick="event.stopPropagation()">
+      <label for="terms-checkbox" style="cursor: pointer;" onclick="event.stopPropagation()">
+        <a href="/terms.html" target="_blank" style="color: white; text-decoration: underline; font-weight: bold;">利用規約</a>に同意してログインする
+      </label>
+    </div>
+    <div style="margin-top: 4px; font-size: 10px; font-weight: normal; opacity: 0.9;">
+      ※ 未成年者のご利用は保護者の同意が必要です
+    </div>
   </div>
 
   <!-- 命日・誕生日 通知バナー (動的表示) -->
@@ -1901,6 +1941,9 @@
             <img id="preview-img" style="display:none" alt="プレビュー">
           </div>
           <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFile(event)">
+          <div style="font-size: 10px; color: #aaa; margin-top: 6px; text-align: center;">
+            アップロードする写真の著作権・肖像権はご自身で確認の上ご利用ください
+          </div>
           <span class="label">お名前（任意）</span>
           <input class="name-input" id="photo-name-input" type="text" placeholder="例：ポチ、モコ（任意）" oninput="syncDogName(this.value)">
           <span class="label">性別（任意）</span>
@@ -2299,7 +2342,15 @@
     </div>
   </div>
 
-  <div class="footer" id="footer-el">Powered by Claude AI 🐾</div>
+  <div class="footer" id="footer-el">
+    <div style="margin-bottom: 8px;">
+      <a href="/terms.html" style="color: #ccc; text-decoration: underline; margin: 0 8px;">利用規約</a>
+      <a href="/privacy.html" style="color: #ccc; text-decoration: underline; margin: 0 8px;">プライバシーポリシー</a>
+      <a href="/cancel.html" style="color: #ccc; text-decoration: underline; margin: 0 8px;">解約はこちら</a>
+      <a href="https://www.instagram.com/ka2kichig" target="_blank" style="color: #ccc; text-decoration: underline; margin: 0 8px;">お問い合わせ</a>
+    </div>
+    <p>&copy; 2026 わんにゃん翻訳機 🐾 Powered by Claude AI</p>
+  </div>
 
   <!-- Firebase SDK -->
   <script type="module">
@@ -2383,9 +2434,11 @@
       return jst.toISOString().slice(0, 10);
     };
 
-    window.updateTicketBadgeUI = function(credits) {
+    window.updateTicketBadgeUI = function(credits, isMonthlyActive = false, monthlyCount = 0) {
       const card = document.getElementById('ticket-badge-card');
       const val = document.getElementById('ticket-count-val');
+      const label = document.getElementById('ticket-label-text') || (card ? card.querySelector('.ticket-label-container span:last-child') : null);
+      const unit = card ? card.querySelector('.ticket-unit') : null;
       if (!card || !val) return;
       
       const user = auth.currentUser;
@@ -2394,13 +2447,23 @@
         return;
       }
       
-      val.textContent = credits;
-      if (credits > 0) {
+      if (isMonthlyActive && (100 - monthlyCount) > 0) {
+        val.textContent = 100 - monthlyCount;
+        if (label) label.textContent = '今月あと';
+        if (unit) unit.textContent = '回';
         card.style.display = 'flex';
         card.classList.remove('zero');
       } else {
-        card.style.display = 'none';
-        card.classList.add('zero');
+        val.textContent = credits;
+        if (label) label.textContent = '追加診断チケット';
+        if (unit) unit.textContent = '枚';
+        if (credits > 0) {
+          card.style.display = 'flex';
+          card.classList.remove('zero');
+        } else {
+          card.style.display = 'none';
+          card.classList.add('zero');
+        }
       }
     };
 
@@ -2408,10 +2471,12 @@
       const banner = document.getElementById('login-banner');
       const badge = document.getElementById('usage-badge');
       const logoutBtn = document.getElementById('logout-btn');
+      const cancelBtn = document.getElementById('cancel-menu-btn');
 
       if (user) {
         banner.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'flex';
+        if (cancelBtn) cancelBtn.style.display = 'flex';
         const ref = doc(db, 'users', user.uid);
         let snap = await getDoc(ref);
         const today = window.todayJST();
@@ -2439,7 +2504,23 @@
         }
         const perUseCredits = data.perUseCredits || 0;
 
-        window.updateTicketBadgeUI(perUseCredits);
+        // 月額プラン有効チェック
+        let isMonthlyActive = false;
+        if (data.monthlyPlanActive && data.monthlyPlanExpiry) {
+          const expiry = data.monthlyPlanExpiry?.toDate ? data.monthlyPlanExpiry.toDate() : null;
+          isMonthlyActive = expiry && expiry > new Date();
+        }
+
+        // 月額カウント管理
+        const currentMonth = window.todayJST().slice(0, 7);
+        const lastUsedMonth = data.lastUsedMonth || '';
+        let monthlyCount = lastUsedMonth === currentMonth ? (data.monthlyCount || 0) : 0;
+        if (lastUsedMonth !== currentMonth && isMonthlyActive) {
+          await updateDoc(ref, { monthlyCount: 0, lastUsedMonth: currentMonth });
+          monthlyCount = 0;
+        }
+
+        window.updateTicketBadgeUI(perUseCredits, isMonthlyActive, monthlyCount);
 
         // 登録日（お試し開始日）からの日数計算
         const regDate = data.registeredAt?.toDate ? data.registeredAt.toDate() : new Date();
@@ -2447,7 +2528,14 @@
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // 登録日を1日目とする
         const isTrialPeriod = diffDays <= 7;
 
-        if (perUseCredits > 0) {
+        if (isMonthlyActive) {
+          const remaining = 100 - monthlyCount;
+          if (remaining > 0) {
+            badge.textContent = `💜 月額プラン｜今月あと${remaining}回診断できます（今日${todayCount}回診断済み）`;
+          } else {
+            badge.textContent = `⚠️ 月額プランの上限（100回）に達しました｜追加診断には都度払い（80円/回）をご利用ください`;
+          }
+        } else if (perUseCredits > 0) {
           badge.textContent = `✅ 追加診断チケットがあります（残り${perUseCredits}回）🐾`;
         } else if (isTrialPeriod) {
           const remainingDays = 8 - diffDays;
@@ -2468,7 +2556,8 @@
         badge.textContent = '';
         window._currentUser = null;
         if (logoutBtn) logoutBtn.style.display = 'none';
-        window.updateTicketBadgeUI(0);
+        if (cancelBtn) cancelBtn.style.display = 'none';
+        window.updateTicketBadgeUI(0, false, 0);
       }
       // ログイン状態が変わったらボタンの有効無効を更新
       updateSubmitButtons();
@@ -2604,7 +2693,22 @@
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Auth
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    async function loginWithGoogle() {
+    async function loginWithGoogle(source) {
+      const bannerCheckbox = document.getElementById('terms-checkbox');
+      const historyCheckbox = document.getElementById('terms-checkbox-history');
+      
+      let checked = false;
+      if (source === 'history' && historyCheckbox) {
+        checked = historyCheckbox.checked;
+      } else if (bannerCheckbox) {
+        checked = bannerCheckbox.checked;
+      }
+      
+      if (!checked) {
+        alert('利用規約に同意してチェックを入れてください。');
+        return;
+      }
+
       try {
         await window._signInWithPopup(window._auth, window._provider);
       } catch (e) {
@@ -2929,7 +3033,18 @@
           <div class="empty-state">
             <div class="empty-icon">🔑</div>
             <p>診断履歴を見るにはログインが必要です</p>
-            <button class="btn" style="margin-top:12px; max-width:200px; margin-left:auto; margin-right:auto;" onclick="loginWithGoogle()">ログインする</button>
+            <div style="margin-top: 10px; margin-bottom: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 13px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <input type="checkbox" id="terms-checkbox-history" style="cursor: pointer;">
+                <label for="terms-checkbox-history" style="cursor: pointer;">
+                  <a href="/terms.html" target="_blank" style="color: #6c5ce7; text-decoration: underline; font-weight: bold;">利用規約</a>に同意してログインする
+                </label>
+              </div>
+              <div style="font-size: 10px; color: #a39388;">
+                ※ 未成年者のご利用は保護者の同意が必要です
+              </div>
+            </div>
+            <button class="btn" style="max-width:200px; margin-left:auto; margin-right:auto;" onclick="loginWithGoogle('history')">ログインする</button>
           </div>`;
         return;
       }
@@ -3174,6 +3289,8 @@
       let diffDays = 0;
       let isMonthlyActive = false;
       let perUseCredits = 0;
+      const currentMonth = window.todayJST().slice(0, 7);
+      let monthlyCount = 0;
 
       if (snap.exists()) {
         const data = snap.data();
@@ -3191,6 +3308,14 @@
           const expiry = data.monthlyPlanExpiry?.toDate ? data.monthlyPlanExpiry.toDate() : null;
           isMonthlyActive = expiry && expiry > new Date();
         }
+
+        // 月額カウント管理
+        const lastUsedMonth = data.lastUsedMonth || '';
+        monthlyCount = lastUsedMonth === currentMonth ? (data.monthlyCount || 0) : 0;
+        if (lastUsedMonth !== currentMonth && isMonthlyActive) {
+          await window._setDoc(ref, { monthlyCount: 0, lastUsedMonth: currentMonth }, { merge: true });
+          monthlyCount = 0;
+        }
       }
 
       // 1週間（7日間）の試用期間内かつ、当日の診断回数が3回未満なら無料
@@ -3204,10 +3329,22 @@
           : `今日${newCount}回診断済み｜次回から80円（お試し残${remainingDays}日）`;
 
         runAction(action);
-      } else if (isMonthlyActive) {
-        // 月額プラン有効：カウント増加して即実行
-        await window._setDoc(ref, { todayCount: todayCount + 1, lastUsedDate: today, usageCount: window._increment(1) }, { merge: true });
-        document.getElementById('usage-badge').textContent = `💜 月額プラン｜今日${todayCount + 1}回診断済み`;
+      } else if (isMonthlyActive && monthlyCount < 100) {
+        // 月額プラン有効かつ上限未満：カウント増加して実行
+        const newMonthlyCount = monthlyCount + 1;
+        await window._setDoc(ref, {
+          todayCount: todayCount + 1,
+          lastUsedDate: today,
+          usageCount: window._increment(1),
+          monthlyCount: newMonthlyCount,
+          lastUsedMonth: currentMonth
+        }, { merge: true });
+
+        const remaining = 100 - newMonthlyCount;
+        document.getElementById('usage-badge').textContent = remaining > 0
+          ? `💜 月額プラン｜今月あと${remaining}回診断できます（今日${todayCount + 1}回診断済み）`
+          : `⚠️ 月額プランの上限（100回）に達しました｜追加診断には都度払い（80円/回）をご利用ください`;
+        window.updateTicketBadgeUI(perUseCredits, true, newMonthlyCount);
         runAction(action);
       } else if (perUseCredits > 0) {
         // 都度払いクレジットあり：クレジットを減らし、カウント増加して実行
@@ -3219,7 +3356,7 @@
           usageCount: window._increment(1)
         }, { merge: true });
 
-        window.updateTicketBadgeUI(newCredits);
+        window.updateTicketBadgeUI(newCredits, isMonthlyActive, monthlyCount);
 
         if (newCredits > 0) {
           document.getElementById('usage-badge').textContent = `✅ 追加診断チケットがあります（残り${newCredits}回）🐾`;
@@ -3235,11 +3372,24 @@
       } else {
         pendingAction = action;
         _selectedPlan = '';
-        // ボタン表示をリセット
-        document.getElementById('stripe-peruse-pay-section').style.display = 'none';
-        document.getElementById('stripe-monthly-pay-section').style.display = 'none';
-        document.getElementById('plan-stripe-peruse').style.borderWidth = '2px';
-        document.getElementById('plan-stripe-monthly').style.borderWidth = '2px';
+
+        // 月額上限到達時のモーダル制御
+        const payModalDesc = document.querySelector('#pay-modal .pay-box > p');
+        const monthlyCard = document.getElementById('plan-stripe-monthly');
+        if (isMonthlyActive && monthlyCount >= 100) {
+          if (payModalDesc) payModalDesc.textContent = "今月の月額プラン上限（100回）に達しました。追加で診断するには都度払い（80円/回）をご利用ください。";
+          if (monthlyCard) monthlyCard.style.display = 'none';
+          selectPayPlan('stripe-peruse');
+        } else {
+          if (payModalDesc) payModalDesc.textContent = "お試し期間終了後は、以下のプランをお選びください";
+          if (monthlyCard) monthlyCard.style.display = 'block';
+          // ボタン表示をリセット
+          document.getElementById('stripe-peruse-pay-section').style.display = 'none';
+          document.getElementById('stripe-monthly-pay-section').style.display = 'none';
+          document.getElementById('plan-stripe-peruse').style.borderWidth = '2px';
+          document.getElementById('plan-stripe-monthly').style.borderWidth = '2px';
+        }
+
         document.getElementById('pay-modal').classList.add('show');
       }
     }

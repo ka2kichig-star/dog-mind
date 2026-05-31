@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>月額プランの解約 💳 | わんにゃん翻訳機</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #f4a261;
+      --primary-dark: #e07020;
+      --bg-base: #fefcf9;
+      --text-main: #4a3f35;
+      --text-sub: #7a6e65;
+      --white: #ffffff;
+      --purple: #7c5cbf;
+      --purple-light: #faf4ff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Zen Maru Gothic', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      line-height: 1.7;
+      padding: 40px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--white);
+      padding: 30px 24px;
+      border-radius: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+      border: 2px solid #e1bee7;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 900;
+      text-align: center;
+      margin-bottom: 20px;
+      color: var(--purple);
+      border-bottom: 3px solid var(--purple);
+      padding-bottom: 10px;
+    }
+
+    .info-box {
+      background: var(--purple-light);
+      border: 2px dashed var(--purple);
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 13px;
+      color: var(--purple);
+      margin-bottom: 24px;
+      font-weight: 500;
+    }
+
+    .info-box p {
+      margin-bottom: 8px;
+    }
+    .info-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 2px solid #e0e0e0;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+      border-color: var(--purple);
+    }
+
+    textarea.form-input {
+      height: 100px;
+      resize: none;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px 24px;
+      border-radius: 28px;
+      border: none;
+      background: var(--purple);
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      margin-top: 10px;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: #5b3f7e;
+      transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .btn-google {
+      background: #db4437;
+    }
+    .btn-google:hover {
+      background: #c23325;
+    }
+
+    /* ===== Footer ===== */
+    footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e1bee7;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    footer a {
+      color: var(--purple);
+      text-decoration: underline;
+      margin: 0 10px;
+    }
+
+    /* Loading screen and message state */
+    .loading-state, .unauth-state, .nosub-state, .success-state {
+      text-align: center;
+      padding: 30px 10px;
+    }
+
+    .state-emoji {
+      font-size: 50px;
+      margin-bottom: 16px;
+    }
+
+    .state-title {
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 10px;
+      color: #2d2d2d;
+    }
+
+    .state-desc {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-bottom: 20px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-left-color: var(--purple);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>月額プランの解約</h1>
+
+    <!-- 1. ローディング表示 -->
+    <div id="state-loading" class="loading-state">
+      <div class="spinner"></div>
+      <div class="state-title">読み込み中...</div>
+      <p class="state-desc">ユーザー情報を確認しています🐾</p>
+    </div>
+
+    <!-- 2. 未ログイン表示 -->
+    <div id="state-unauth" class="unauth-state" style="display: none;">
+      <div class="state-emoji">🔑</div>
+      <div class="state-title">ログインが必要です</div>
+      <p class="state-desc">解約手続きを進めるには、月額プランを契約しているGoogleアカウントでログインしてください。</p>
+      <button class="btn btn-google" onclick="loginWithGoogle()">Googleでログインする</button>
+    </div>
+
+    <!-- 3. 未契約表示 -->
+    <div id="state-nosub" class="nosub-state" style="display: none;">
+      <div class="state-emoji">💡</div>
+      <div class="state-title">月額プランは未契約です</div>
+      <p class="state-desc" id="nosub-custom-msg">このアカウントでは月額プランの有効なサブスクリプションが見つかりませんでした。</p>
+      <a href="/" class="btn" style="text-decoration:none; display:inline-block;">アプリへ戻る</a>
+    </div>
+
+    <!-- 4. 解約完了表示 -->
+    <div id="state-success" class="success-state" style="display: none;">
+      <div class="state-emoji">🌸</div>
+      <div class="state-title">解約手続きが完了しました</div>
+      <p class="state-desc">
+        定期課金が解除されました。<br>
+        解約後も現在の有効期限（<span id="expiry-date-success" style="font-weight:bold;color:var(--purple)">-</span>）までは引き続き、すべての機能を使い放題でご利用いただけます。
+      </p>
+      <a href="/" class="btn" style="text-decoration:none; display:inline-block;">アプリへ戻る</a>
+    </div>
+
+    <!-- 5. 解約フォーム -->
+    <div id="state-form" style="display: none;">
+      <div class="info-box">
+        <p>💡 <b>解約後も使い放題！</b></p>
+        <p>解約手続きが完了した後も、現在の有効期限（<span id="expiry-date" style="font-weight:bold;">-</span>）までは「♾️ 使い放題」のままご利用いただけます。ご安心ください。</p>
+      </div>
+
+      <form id="cancel-form" onsubmit="submitCancellation(event)">
+        <div class="form-group">
+          <label for="cancel-name">お名前</label>
+          <input type="text" id="cancel-name" class="form-input" required placeholder="山田 太郎">
+        </div>
+
+        <div class="form-group">
+          <label for="cancel-email">メールアドレス</label>
+          <input type="email" id="cancel-email" class="form-input" required placeholder="your@email.com">
+        </div>
+
+        <div class="form-group">
+          <label for="cancel-reason">解約理由（よろしければ教えてください）</label>
+          <textarea id="cancel-reason" class="form-input" required placeholder="例：お試し期間が終わったため、別の機能を使いたい、など..."></textarea>
+        </div>
+
+        <button type="submit" id="submit-btn" class="btn">解約を完了する</button>
+      </form>
+    </div>
+
+    <footer>
+      <div style="margin-bottom: 8px;">
+        <a href="terms.html">利用規約</a>
+        <a href="privacy.html">プライバシーポリシー</a>
+        <a href="cancel.html">解約はこちら</a>
+        <a href="https://www.instagram.com/ka2kichig" target="_blank">お問い合わせ</a>
+      </div>
+      <p>&copy; 2026 わんにゃん翻訳機 🐾 Powered by Claude AI</p>
+    </footer>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBio-wwXDiPKYQ5mPiqE98bwakOKl1UPvo",
+      authDomain: "wanwan-translator.firebaseapp.com",
+      projectId: "wanwan-translator",
+      storageBucket: "wanwan-translator.firebasestorage.app",
+      messagingSenderId: "1060567209218",
+      appId: "1:1060567209218:web:2c2298458b8e378b119e1b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    const FUNCTIONS_BASE_URL = 'https://asia-northeast1-wanwan-translator.cloudfunctions.net';
+
+    // UI elements
+    const stateLoading = document.getElementById('state-loading');
+    const stateUnauth = document.getElementById('state-unauth');
+    const stateNosub = document.getElementById('state-nosub');
+    const stateSuccess = document.getElementById('state-success');
+    const stateForm = document.getElementById('state-form');
+    const expiryDateSpan = document.getElementById('expiry-date');
+    const expiryDateSuccessSpan = document.getElementById('expiry-date-success');
+    const nosubCustomMsg = document.getElementById('nosub-custom-msg');
+
+    let currentUser = null;
+
+    // Google Login logic
+    window.loginWithGoogle = async () => {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        console.error('Login error:', e);
+        alert('ログインに失敗しました。');
+      }
+    };
+
+    // Submitting cancellation to firebase function
+    window.submitCancellation = async (event) => {
+      event.preventDefault();
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '処理中...';
+
+      try {
+        const token = await currentUser.getIdToken();
+        const response = await fetch(`${FUNCTIONS_BASE_URL}/cancelStripeSubscription`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Firebase-Auth': token
+          }
+        });
+
+        const data = await response.json();
+        if (response.ok && data.success) {
+          stateForm.style.display = 'none';
+          stateSuccess.style.display = 'block';
+        } else {
+          throw new Error(data.error || '解約処理に失敗しました。');
+        }
+      } catch (e) {
+        console.error('Cancel error:', e);
+        alert('エラーが発生しました: ' + e.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = '解約を完了する';
+      }
+    };
+
+    // Monitor auth state
+    onAuthStateChanged(auth, async (user) => {
+      stateLoading.style.display = 'block';
+      stateUnauth.style.display = 'none';
+      stateNosub.style.display = 'none';
+      stateSuccess.style.display = 'none';
+      stateForm.style.display = 'none';
+
+      if (!user) {
+        currentUser = null;
+        stateLoading.style.display = 'none';
+        stateUnauth.style.display = 'block';
+        return;
+      }
+
+      currentUser = user;
+
+      try {
+        const ref = doc(db, 'users', user.uid);
+        const snap = await getDoc(ref);
+
+        if (!snap.exists()) {
+          stateLoading.style.display = 'none';
+          stateNosub.style.display = 'block';
+          return;
+        }
+
+        const data = snap.data();
+        let isMonthlyActive = false;
+        let formattedExpiry = '';
+
+        if (data.monthlyPlanActive && data.monthlyPlanExpiry) {
+          const expiry = data.monthlyPlanExpiry?.toDate ? data.monthlyPlanExpiry.toDate() : null;
+          isMonthlyActive = expiry && expiry > new Date();
+          if (expiry) {
+            formattedExpiry = expiry.toLocaleDateString('ja-JP', {
+              year: 'numeric', month: '2-digit', day: '2-digit'
+            });
+          }
+        }
+
+        if (!isMonthlyActive) {
+          if (data.monthlyPlanCancelScheduled) {
+            nosubCustomMsg.innerHTML = `既に解約手続きは完了しています。<br>有効期限（${formattedExpiry || '-'}）までは引き続き使い放題プランが適用されます。`;
+          } else {
+            nosubCustomMsg.textContent = '現在、有効な月額プランはご契約されていません。';
+          }
+          stateLoading.style.display = 'none';
+          stateNosub.style.display = 'block';
+          return;
+        }
+
+        // Set expiry date in form
+        expiryDateSpan.textContent = formattedExpiry || 'JST基準の期末';
+        expiryDateSuccessSpan.textContent = formattedExpiry || 'JST基準の期末';
+
+        // Pre-fill form fields
+        document.getElementById('cancel-name').value = user.displayName || '';
+        document.getElementById('cancel-email').value = user.email || '';
+
+        stateLoading.style.display = 'none';
+        stateForm.style.display = 'block';
+      } catch (e) {
+        console.error('Error fetching subscription state:', e);
+        alert('ユーザー情報の取得に失敗しました。');
+        stateLoading.style.display = 'none';
+        stateUnauth.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

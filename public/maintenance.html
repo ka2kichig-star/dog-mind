@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>メンテナンス中 🐶🐱 | わんにゃん翻訳機</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #f4a261;
+      --primary-dark: #e07020;
+      --bg-base: #fefcf9;
+      --text-main: #4a3f35;
+      --text-sub: #7a6e65;
+      --white: #ffffff;
+      --purple: #7c5cbf;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Zen Maru Gothic', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      line-height: 1.7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--white);
+      padding: 40px 24px;
+      border-radius: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+      border: 2px solid #ffeedd;
+      text-align: center;
+    }
+
+    .icon-wrap {
+      font-size: 64px;
+      margin-bottom: 20px;
+      display: inline-block;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 900;
+      margin-bottom: 12px;
+      color: var(--primary-dark);
+    }
+
+    p {
+      font-size: 14px;
+      color: var(--text-sub);
+      margin-bottom: 30px;
+    }
+
+    .sns-box {
+      background: #faf4ff;
+      border: 2px dashed var(--purple);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .sns-box h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--purple);
+      margin-bottom: 12px;
+    }
+
+    .sns-links {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .sns-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: 24px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 13px;
+      color: white;
+      transition: all 0.2s;
+    }
+
+    .sns-instagram {
+      background: #e1306c;
+    }
+    .sns-instagram:hover {
+      background: #c13584;
+      transform: translateY(-1px);
+    }
+
+    .sns-threads {
+      background: #000000;
+    }
+    .sns-threads:hover {
+      background: #111111;
+      transform: translateY(-1px);
+    }
+
+    /* ===== Footer ===== */
+    footer {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #ffeedd;
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    footer a {
+      color: var(--primary-dark);
+      text-decoration: underline;
+      margin: 0 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="icon-wrap">🛠️🐶🐱</div>
+    <h1>ただいまメンテナンス中です</h1>
+    <p>復旧までしばらくお待ちください。<br>ご不便をおかけして申し訳ありません🐾</p>
+
+    <div class="sns-box">
+      <h3>📢 最新の状況はSNSで配信中</h3>
+      <div class="sns-links">
+        <a href="https://www.instagram.com/ka2kichig" target="_blank" class="sns-btn sns-instagram">📸 Instagram</a>
+        <a href="https://www.threads.net/@ka2kichig" target="_blank" class="sns-btn sns-threads">💬 Threads</a>
+      </div>
+    </div>
+
+    <footer>
+      <div style="margin-bottom: 8px;">
+        <a href="terms.html">利用規約</a>
+        <a href="privacy.html">プライバシーポリシー</a>
+        <a href="cancel.html">解約はこちら</a>
+        <a href="https://www.instagram.com/ka2kichig" target="_blank">お問い合わせ</a>
+      </div>
+      <p>&copy; 2026 わんにゃん翻訳機 🐾 Powered by Claude AI</p>
+    </footer>
+  </div>
+
+</body>
+</html>

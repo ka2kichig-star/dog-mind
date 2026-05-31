@@ -333,6 +333,10 @@ exports.stripeWebhook = onRequest(
               lastPaymentAt: admin.firestore.FieldValue.serverTimestamp(),
               stripeSessionId: obj.id || null,
               stripeSubscriptionId: obj.subscription || null,
+              subscriptionStatus: "active",
+              subscriptionPlan: "monthly",
+              monthlyCount: 0,
+              monthlyLimit: 100,
             }, { merge: true });
 
             console.log(`Monthly plan activated for uid: ${uid}, subscriptionId: ${obj.subscription}, expires: ${expiry.toISOString()}`);
@@ -478,6 +482,10 @@ exports.stripeWebhook = onRequest(
             monthlyPlanExpiry: admin.firestore.Timestamp.fromDate(expiry),
             lastPaymentAt: admin.firestore.FieldValue.serverTimestamp(),
             stripeSubscriptionId: subscriptionId, // 存在しない場合に備えて保存
+            subscriptionStatus: "active",
+            subscriptionPlan: "monthly",
+            monthlyCount: 0,
+            monthlyLimit: 100,
           }, { merge: true });
 
           console.log(`Monthly plan active/renewed for uid: ${uid}, expires: ${expiry.toISOString()}`);
@@ -500,6 +508,8 @@ exports.stripeWebhook = onRequest(
           const userDoc = usersSnap.docs[0];
           await db.collection("users").doc(userDoc.id).set({
             monthlyPlanActive: false,
+            subscriptionStatus: "canceled",
+            subscriptionPlan: "",
           }, { merge: true });
           console.log(`Monthly plan cancelled for uid: ${userDoc.id}`);
         }

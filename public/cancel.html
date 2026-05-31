@@ -376,7 +376,7 @@
         let isMonthlyActive = false;
         let formattedExpiry = '';
 
-        if (data.monthlyPlanActive && data.monthlyPlanExpiry) {
+        if ((data.monthlyPlanActive || data.subscriptionStatus === "active") && data.monthlyPlanExpiry) {
           const expiry = data.monthlyPlanExpiry?.toDate ? data.monthlyPlanExpiry.toDate() : null;
           isMonthlyActive = expiry && expiry > new Date();
           if (expiry) {

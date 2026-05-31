@@ -2437,7 +2437,7 @@
       return jst.toISOString().slice(0, 10);
     };
 
-    window.updateTicketBadgeUI = function(credits, isMonthlyActive = false, monthlyCount = 0) {
+    window.updateTicketBadgeUI = function(credits, isMonthlyActive = false, monthlyCount = 0, monthlyLimit = 100) {
       const card = document.getElementById('ticket-badge-card');
       const val = document.getElementById('ticket-count-val');
       const label = document.getElementById('ticket-label-text') || (card ? card.querySelector('.ticket-label-container span:last-child') : null);
@@ -2450,8 +2450,8 @@
         return;
       }
       
-      if (isMonthlyActive && (100 - monthlyCount) > 0) {
-        val.textContent = 100 - monthlyCount;
+      if (isMonthlyActive && (monthlyLimit - monthlyCount) > 0) {
+        val.textContent = monthlyLimit - monthlyCount;
         if (label) label.textContent = '今月あと';
         if (unit) unit.textContent = '回';
         card.style.display = 'flex';
@@ -2509,7 +2509,7 @@
 
         // 月額プラン有効チェック
         let isMonthlyActive = false;
-        if (data.monthlyPlanActive && data.monthlyPlanExpiry) {
+        if ((data.monthlyPlanActive || data.subscriptionStatus === "active") && data.monthlyPlanExpiry) {
           const expiry = data.monthlyPlanExpiry?.toDate ? data.monthlyPlanExpiry.toDate() : null;
           isMonthlyActive = expiry && expiry > new Date();
         }
@@ -2517,13 +2517,14 @@
         // 月額カウント管理
         const currentMonth = window.todayJST().slice(0, 7);
         const lastUsedMonth = data.lastUsedMonth || '';
+        const monthlyLimit = data.monthlyLimit || 100;
         let monthlyCount = lastUsedMonth === currentMonth ? (data.monthlyCount || 0) : 0;
         if (lastUsedMonth !== currentMonth && isMonthlyActive) {
           await updateDoc(ref, { monthlyCount: 0, lastUsedMonth: currentMonth });
           monthlyCount = 0;
         }
 
-        window.updateTicketBadgeUI(perUseCredits, isMonthlyActive, monthlyCount);
+        window.updateTicketBadgeUI(perUseCredits, isMonthlyActive, monthlyCount, monthlyLimit);
 
         // 登録日（お試し開始日）からの日数計算
         const regDate = data.registeredAt?.toDate ? data.registeredAt.toDate() : new Date();
@@ -2532,11 +2533,11 @@
         const isTrialPeriod = diffDays <= 7;
 
         if (isMonthlyActive) {
-          const remaining = 100 - monthlyCount;
+          const remaining = monthlyLimit - monthlyCount;
           if (remaining > 0) {
             badge.textContent = `💜 月額プラン｜今月あと${remaining}回診断できます（今日${todayCount}回診断済み）`;
           } else {
-            badge.textContent = `⚠️ 月額プランの上限（100回）に達しました｜追加診断には都度払い（80円/回）をご利用ください`;
+            badge.textContent = `⚠️ 月額プランの上限（${monthlyLimit}回）に達しました｜追加診断には都度払い（80円/回）をご利用ください`;
           }
         } else if (perUseCredits > 0) {
           badge.textContent = `✅ 追加診断チケットがあります（残り${perUseCredits}回）🐾`;
@@ -2560,7 +2561,7 @@
         window._currentUser = null;
         if (logoutBtn) logoutBtn.style.display = 'none';
         if (cancelBtn) cancelBtn.style.display = 'none';
-        window.updateTicketBadgeUI(0, false, 0);
+        window.updateTicketBadgeUI(0, false, 0, 100);
       }
       // ログイン状態が変わったらボタンの有効無効を更新
       updateSubmitButtons();
@@ -3307,13 +3308,14 @@
         isTrialPeriod = diffDays <= 7;
 
         // 月額プラン有効チェック
-        if (data.monthlyPlanActive && data.monthlyPlanExpiry) {
+        if ((data.monthlyPlanActive || data.subscriptionStatus === "active") && data.monthlyPlanExpiry) {
           const expiry = data.monthlyPlanExpiry?.toDate ? data.monthlyPlanExpiry.toDate() : null;
           isMonthlyActive = expiry && expiry > new Date();
         }
 
         // 月額カウント管理
         const lastUsedMonth = data.lastUsedMonth || '';
+        const monthlyLimit = data.monthlyLimit || 100;
         monthlyCount = lastUsedMonth === currentMonth ? (data.monthlyCount || 0) : 0;
         if (lastUsedMonth !== currentMonth && isMonthlyActive) {
           await window._setDoc(ref, { monthlyCount: 0, lastUsedMonth: currentMonth }, { merge: true });
@@ -3332,7 +3334,7 @@
           : `今日${newCount}回診断済み｜次回から80円（お試し残${remainingDays}日）`;
 
         runAction(action);
-      } else if (isMonthlyActive && monthlyCount < 100) {
+      } else if (isMonthlyActive && monthlyCount < monthlyLimit) {
         // 月額プラン有効かつ上限未満：カウント増加して実行
         const newMonthlyCount = monthlyCount + 1;
         await window._setDoc(ref, {
@@ -3343,11 +3345,11 @@
           lastUsedMonth: currentMonth
         }, { merge: true });
 
-        const remaining = 100 - newMonthlyCount;
+        const remaining = monthlyLimit - newMonthlyCount;
         document.getElementById('usage-badge').textContent = remaining > 0
           ? `💜 月額プラン｜今月あと${remaining}回診断できます（今日${todayCount + 1}回診断済み）`
-          : `⚠️ 月額プランの上限（100回）に達しました｜追加診断には都度払い（80円/回）をご利用ください`;
-        window.updateTicketBadgeUI(perUseCredits, true, newMonthlyCount);
+          : `⚠️ 月額プランの上限（${monthlyLimit}回）に達しました｜追加診断には都度払い（80円/回）をご利用ください`;
+        window.updateTicketBadgeUI(perUseCredits, true, newMonthlyCount, monthlyLimit);
         runAction(action);
       } else if (perUseCredits > 0) {
         // 都度払いクレジットあり：クレジットを減らし、カウント増加して実行
@@ -3359,7 +3361,7 @@
           usageCount: window._increment(1)
         }, { merge: true });
 
-        window.updateTicketBadgeUI(newCredits, isMonthlyActive, monthlyCount);
+        window.updateTicketBadgeUI(newCredits, isMonthlyActive, monthlyCount, monthlyLimit);
 
         if (newCredits > 0) {
           document.getElementById('usage-badge').textContent = `✅ 追加診断チケットがあります（残り${newCredits}回）🐾`;
@@ -3379,8 +3381,8 @@
         // 月額上限到達時のモーダル制御
         const payModalDesc = document.querySelector('#pay-modal .pay-box > p');
         const monthlyCard = document.getElementById('plan-stripe-monthly');
-        if (isMonthlyActive && monthlyCount >= 100) {
-          if (payModalDesc) payModalDesc.textContent = "今月の月額プラン上限（100回）に達しました。追加で診断するには都度払い（80円/回）をご利用ください。";
+        if (isMonthlyActive && monthlyCount >= monthlyLimit) {
+          if (payModalDesc) payModalDesc.textContent = `今月の月額プラン上限（${monthlyLimit}回）に達しました。追加で診断するには都度払い（80円/回）をご利用ください。`;
           if (monthlyCard) monthlyCard.style.display = 'none';
           selectPayPlan('stripe-peruse');
         } else {

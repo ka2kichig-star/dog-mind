@@ -581,3 +581,71 @@ exports.cancelStripeSubscription = onRequest(
   }
 );
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// 8. adminCancelSubscription — 管理者専用：Stripe サブスクリプション強制即時解約
+// ═══════════════════════════════════════════════════════════════════════════════
+exports.adminCancelSubscription = onRequest(
+  {
+    secrets: [stripeSecretKey],
+    cors: true,
+    region: "asia-northeast1",
+    invoker: "public",
+  },
+  async (req, res) => {
+    setCors(res);
+    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+
+    try {
+      const decoded = await verifyToken(req);
+      if (decoded.uid !== "OfVGpwdVoUN1peNS1bjGKc1ZG2R2") {
+        res.status(403).json({ error: "Forbidden: Admin access only" });
+        return;
+      }
+
+      const { targetUid } = req.body;
+      if (!targetUid) {
+        res.status(400).json({ error: "targetUid is required" });
+        return;
+      }
+
+      // Firestoreから対象ユーザーの stripeSubscriptionId を取得
+      const userRef = db.collection("users").doc(targetUid);
+      const userSnap = await userRef.get();
+      if (!userSnap.exists) {
+        res.status(404).json({ error: "User not found" });
+        return;
+      }
+
+      const userData = userSnap.data();
+      const subscriptionId = userData.stripeSubscriptionId;
+
+      if (!subscriptionId) {
+        res.status(400).json({ error: "No active subscription found for this user" });
+        return;
+      }
+
+      // Stripe SDK 初期化
+      const Stripe = require("stripe");
+      const stripe = new Stripe(stripeSecretKey.value().trim(), { apiVersion: "2024-06-20" });
+
+      // Stripeサブスクリプションを即時解約
+      await stripe.subscriptions.cancel(subscriptionId);
+
+      // Firestoreのサブスクリプション状態を即時無効化
+      await userRef.set({
+        monthlyPlanActive: false,
+        subscriptionStatus: "canceled",
+        subscriptionPlan: "",
+        monthlyPlanCancelScheduled: false,
+      }, { merge: true });
+
+      console.log(`Stripe subscription force cancelled: ${subscriptionId} for uid: ${targetUid} by admin`);
+      res.json({ success: true, message: "Subscription force cancelled successfully." });
+    } catch (err) {
+      console.error("adminCancelSubscription error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+

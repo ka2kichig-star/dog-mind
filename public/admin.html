@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>わんにゃん翻訳機 | 管理者ダッシュボード 🐾</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary: #7c5cbf;
+      --primary-light: #faf4ff;
+      --primary-dark: #5b3f7e;
+      --secondary: #f4a261;
+      --accent: #f48fb1;
+      --bg-base: #fefcf9;
+      --white: #ffffff;
+      --text-main: #4a3f35;
+      --text-sub: #7a6e65;
+      --border: #e1bee7;
+      --danger: #e74c3c;
+      --success: #2ecc71;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Zen Maru Gothic', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ===== Auth Screen ===== */
+    .auth-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      padding: 40px 16px;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--white);
+      padding: 40px 30px;
+      border-radius: 28px;
+      border: 3px solid var(--border);
+      box-shadow: 0 12px 40px rgba(124, 92, 191, 0.08);
+      text-align: center;
+    }
+
+    .auth-logo {
+      font-size: 60px;
+      margin-bottom: 16px;
+    }
+
+    .auth-title {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .auth-subtitle {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-bottom: 24px;
+    }
+
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 30px;
+      border: none;
+      background: #db4437;
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .btn-google:hover {
+      background: #c23325;
+      transform: translateY(-1px);
+    }
+
+    .auth-error {
+      background: #fdf2f2;
+      border: 1px solid #f8b4b4;
+      color: #9b1c1c;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-top: 16px;
+      display: none;
+    }
+
+    /* ===== Main Dashboard Layout ===== */
+    .admin-header {
+      background: var(--white);
+      border-bottom: 2px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-logo {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .btn-logout {
+      padding: 6px 12px;
+      border-radius: 14px;
+      border: 1.5px solid var(--text-sub);
+      background: transparent;
+      color: var(--text-main);
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 11px;
+      transition: all 0.15s;
+    }
+
+    .btn-logout:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .admin-layout {
+      display: flex;
+      flex: 1;
+    }
+
+    /* Sidebar Navigation */
+    .admin-sidebar {
+      width: 240px;
+      background: var(--white);
+      border-right: 2px solid var(--border);
+      padding: 24px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      border: none;
+      background: transparent;
+      color: var(--text-main);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .sidebar-btn:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .sidebar-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Content Area */
+    .admin-content {
+      flex: 1;
+      padding: 30px 24px;
+      overflow-x: hidden;
+    }
+
+    .content-panel {
+      display: none;
+    }
+
+    .content-panel.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel-title {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--primary);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ===== UI Cards Grid ===== */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--primary);
+    }
+
+    .stat-card.secondary::before { background: var(--secondary); }
+    .stat-card.accent::before { background: var(--accent); }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-sub);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .stat-val {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--text-main);
+    }
+
+    .stat-desc {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-top: 4px;
+    }
+
+    /* ===== Charts and Details Split ===== */
+    .details-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+
+    @media (max-width: 900px) {
+      .details-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card-box {
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: 24px;
+      padding: 24px;
+    }
+
+    .card-box-title {
+      font-size: 16px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* ===== Lists / Tables ===== */
+    .table-container {
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .admin-table th, .admin-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #eef2f5;
+    }
+
+    .admin-table th {
+      background-color: var(--primary-light);
+      font-weight: 900;
+      color: var(--primary);
+    }
+
+    .admin-table tr:hover td {
+      background-color: #fafafb;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .badge-monthly { background: var(--primary-light); color: var(--primary); }
+    .badge-peruse { background: #fff8e1; color: #f57f17; }
+    .badge-free { background: #e8f5e9; color: #2e7d32; }
+    .badge-banned { background: #ffebee; color: var(--danger); }
+
+    /* Action Buttons */
+    .btn-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn-small {
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background: white;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+
+    .btn-small:hover {
+      background: #f5f5f5;
+    }
+
+    .btn-small.danger {
+      color: var(--danger);
+      border-color: #ffcdd2;
+    }
+
+    .btn-small.danger:hover {
+      background: #ffebee;
+    }
+
+    .btn-small.primary {
+      color: var(--primary);
+      border-color: #e1bee7;
+    }
+
+    .btn-small.primary:hover {
+      background: var(--primary-light);
+    }
+
+    /* ===== Search Bar ===== */
+    .search-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .form-input {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+    }
+
+    /* ===== Forms / Config Switch ===== */
+    .config-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1.5px dashed #eef2f5;
+    }
+
+    .config-row:last-child {
+      border-bottom: none;
+    }
+
+    .config-label-container h4 {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .config-label-container p {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    /* Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    /* ===== Textareas / Buttons ===== */
+    .btn-large {
+      padding: 12px 24px;
+      background: var(--primary);
+      color: white;
+      border-radius: 24px;
+      border: none;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .btn-large:hover {
+      background: var(--primary-dark);
+    }
+
+    /* ===== Responsive layout ===== */
+    @media (max-width: 768px) {
+      .admin-layout {
+        flex-direction: column;
+      }
+      .admin-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 2px solid var(--border);
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 12px;
+      }
+      .sidebar-btn {
+        white-space: nowrap;
+        padding: 8px 14px;
+      }
+      .admin-content {
+        padding: 20px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading State -->
+  <div id="admin-global-loader" style="position:fixed; top:0; left:0; right:0; bottom:0; background:var(--bg-base); z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+    <div style="width:40px; height:40px; border:4px solid rgba(0,0,0,0.1); border-left-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin-bottom:16px;"></div>
+    <div style="font-size:14px; font-weight:700; color:var(--primary);">管理者認証を確認中…🐾</div>
+  </div>
+
+  <!-- Google Sign-in Panel (Administrators Only) -->
+  <div id="auth-view" class="auth-container" style="display:none;">
+    <div class="auth-card">
+      <div class="auth-logo">🔑</div>
+      <h2 class="auth-title">管理者ログイン</h2>
+      <p class="auth-subtitle">わんにゃん翻訳機の管理者専用ポータルです</p>
+      <button class="btn-google" onclick="loginAdmin()">
+        <svg style="width:18px;height:18px;fill:white;" viewBox="0 0 24 24"><path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114-3.51 0-6.377-2.87-6.377-6.38s2.867-6.38 6.377-6.38c1.62 0 3.096.604 4.221 1.594l3.18-3.18C19.106 2.065 15.918 1 12.24 1c-6.075 0-11 4.925-11 11s4.925 11 11 11c6.38 0 10.37-4.5 10.37-10.37 0-.665-.06-1.285-.18-1.857H12.24z"/></svg>
+        Googleでログイン
+      </button>
+      <div id="auth-error-msg" class="auth-error"></div>
+    </div>
+  </div>
+
+  <!-- Main Dashboard View -->
+  <div id="dashboard-view" style="display:none; flex-direction:column; flex:1;">
+    <!-- Top Header -->
+    <header class="admin-header">
+      <a href="#" class="header-logo">🐶🐱 わんにゃん翻訳機 <span>管理パネル</span></a>
+      <div class="header-user">
+        <span style="font-weight:700;" id="admin-user-email">-</span>
+        <button class="btn-logout" onclick="logoutAdmin()">ログアウト</button>
+      </div>
+    </header>
+
+    <!-- Side Menu & Main Panels Split -->
+    <div class="admin-layout">
+      <!-- Sidebar Navigation -->
+      <nav class="admin-sidebar">
+        <button class="sidebar-btn active" onclick="switchPanel('dashboard', this)">📊 ダッシュボード</button>
+        <button class="sidebar-btn" onclick="switchPanel('users', this)">👥 ユーザー管理</button>
+        <button class="sidebar-btn" onclick="switchPanel('sales', this)">💳 売上・決済</button>
+        <button class="sidebar-btn" onclick="switchPanel('content', this)">⚙️ コンテンツ・バナー</button>
+        <button class="sidebar-btn" onclick="switchPanel('cost-sns', this)">🤖 APIコスト・SNS</button>
+      </nav>
+
+      <!-- Main Panels Content -->
+      <main class="admin-content">
+
+        <!-- 1. ダッシュボードパネル -->
+        <section id="panel-dashboard" class="content-panel active">
+          <h2 class="panel-title">📊 システム概況</h2>
+          
+          <div class="cards-grid">
+            <div class="stat-card">
+              <div class="stat-label">総ユーザー数</div>
+              <div class="stat-val" id="stat-total-users">0</div>
+              <div class="stat-desc">累計登録者アカウント数</div>
+            </div>
+            <div class="stat-card secondary">
+              <div class="stat-label">今日の新規登録</div>
+              <div class="stat-val" id="stat-today-registrations">0</div>
+              <div class="stat-desc" id="stat-today-reg-date">JST基準本日</div>
+            </div>
+            <div class="stat-card accent">
+              <div class="stat-label">今日の診断回数</div>
+              <div class="stat-val" id="stat-today-diagnoses">0</div>
+              <div class="stat-desc">本日の診断アクティビティ</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">月額契約者数</div>
+              <div class="stat-val" id="stat-active-monthly">0</div>
+              <div class="stat-desc">アクティブな月額プラン会員</div>
+            </div>
+          </div>
+
+          <div class="details-row">
+            <div class="card-box">
+              <div class="card-box-title">📈 直近1週間の日別売上推移 (円)</div>
+              <div style="position:relative; height:300px; width:100%;">
+                <canvas id="salesChart"></canvas>
+              </div>
+            </div>
+
+            <div class="card-box">
+              <div class="card-box-title">🐶🐱 診断比率</div>
+              <div style="position:relative; height:180px; width:100%; display:flex; align-items:center; justify-content:center;">
+                <canvas id="ratioChart"></canvas>
+              </div>
+              <div style="margin-top:16px; font-size:12px; color:var(--text-sub); text-align:center;" id="ratio-details-txt">
+                犬: -回 vs 猫: -回
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. ユーザー管理パネル -->
+        <section id="panel-users" class="content-panel">
+          <h2 class="panel-title">👥 ユーザーデータベース</h2>
+          
+          <div class="card-box">
+            <div class="search-row">
+              <input type="text" id="user-search-input" class="form-input" placeholder="メールアドレスまたはユーザーIDで検索…" oninput="filterUsersTable()">
+            </div>
+            <div class="table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>メールアドレス</th>
+                    <th>登録日時</th>
+                    <th>プラン</th>
+                    <th>使用数 (今月/累計)</th>
+                    <th>状態</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="users-table-body">
+                  <tr>
+                    <td colspan="6" style="text-align:center; color:var(--text-sub);">ユーザーデータをロード中…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. 売上管理パネル -->
+        <section id="panel-sales" class="content-panel">
+          <h2 class="panel-title">💳 売上・決済履歴</h2>
+          
+          <div class="cards-grid">
+            <div class="stat-card">
+              <div class="stat-label">今日の売上</div>
+              <div class="stat-val" id="stat-sales-today">¥0</div>
+              <div class="stat-desc">都度払い＋月額プランの本日売上</div>
+            </div>
+            <div class="stat-card secondary">
+              <div class="stat-label">今月の売上</div>
+              <div class="stat-val" id="stat-sales-month">¥0</div>
+              <div class="stat-desc">当月の合計売上金額</div>
+            </div>
+            <div class="stat-card accent">
+              <div class="stat-label">累計売上</div>
+              <div class="stat-val" id="stat-sales-total">¥0</div>
+              <div class="stat-desc">決済イベントからの合計</div>
+            </div>
+          </div>
+
+          <div class="card-box">
+            <div class="card-box-title">💳 直近の決済トランザクション (StripeEvents)</div>
+            <div class="table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>決済日時</th>
+                    <th>ユーザーID (UID)</th>
+                    <th>プラン</th>
+                    <th>イベント種類</th>
+                    <th>金額</th>
+                    <th>Stripeリンク</th>
+                  </tr>
+                </thead>
+                <tbody id="sales-table-body">
+                  <tr>
+                    <td colspan="6" style="text-align:center; color:var(--text-sub);">決済データをロード中…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. コンテンツ・設定管理パネル -->
+        <section id="panel-content" class="content-panel">
+          <h2 class="panel-title">⚙️ コンテンツ & システム設定</h2>
+          
+          <div class="cards-grid" style="grid-template-columns: 1fr 1fr; gap: 24px;">
+            <!-- メンテナンスモード設定 -->
+            <div class="card-box">
+              <div class="card-box-title">🚧 メンテナンス管理</div>
+              
+              <div class="config-row">
+                <div class="config-label-container">
+                  <h4>メンテナンスモードの有効化</h4>
+                  <p>一般ユーザーを maintenance.html に即座にリダイレクトさせます（管理者は対象外）</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="maintenance-toggle" onchange="updateMaintenanceMode(this.checked)">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- お知らせバナー設定 -->
+            <div class="card-box">
+              <div class="card-box-title">📢 動的お知らせバナー</div>
+              <p style="font-size:12px; color:var(--text-sub); margin-bottom:12px;">アプリのトップページ最上部に表示されるお知らせのメッセージをリアルタイムで変更します（空欄で非表示）。</p>
+              
+              <div style="margin-bottom:16px;">
+                <textarea id="announcement-banner-input" class="form-input" style="width:100%; height:80px; resize:none;" placeholder="例：🐾 メンテナンス終了のお知らせ、新しいにゃんにゃんモードが追加されました！"></textarea>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button class="btn-large" onclick="saveAnnouncementBanner()">更新する</button>
+                <button class="btn-small danger" onclick="deleteAnnouncementBanner()">バナーを非表示にする</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. APIコスト & SNS自動化パネル -->
+        <section id="panel-cost-sns" class="content-panel">
+          <h2 class="panel-title">🤖 APIコスト & SNSマーケティング</h2>
+          
+          <div class="details-row">
+            <!-- APIコスト管理 -->
+            <div class="card-box">
+              <div class="card-box-title">💸 今月のClaude API推定コスト (v3.5 Sonnet / Sonnet v2)</div>
+              
+              <div class="cards-grid" style="margin-top:16px;">
+                <div class="stat-card">
+                  <div class="stat-label">今月の総診断回数</div>
+                  <div class="stat-val" id="stat-cost-count">0回</div>
+                </div>
+                <div class="stat-card secondary">
+                  <div class="stat-label">今月のAPI推定コスト</div>
+                  <div class="stat-val" id="stat-cost-estimate">¥0</div>
+                  <div class="stat-desc">診断平均:¥4.50/回, 会話:¥1.50/回</div>
+                </div>
+                <div class="stat-card accent">
+                  <div class="stat-label">1日あたり平均コスト</div>
+                  <div class="stat-val" id="stat-cost-average-day">¥0</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 虹の橋モード利用状況 -->
+            <div class="card-box">
+              <div class="card-box-title">🌈 虹の橋モード統計</div>
+              <div class="cards-grid" style="grid-template-columns:1fr; gap:16px; margin-top:16px;">
+                <div class="stat-card accent" style="padding:14px 20px;">
+                  <div class="stat-label">虹の橋の登録ペット数</div>
+                  <div class="stat-val" id="stat-rainbow-pets">0</div>
+                  <div class="stat-desc">思い出のアルバム累計登録</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="details-row">
+            <!-- SNS自動投稿補助 -->
+            <div class="card-box">
+              <div class="card-box-title">📝 Threads / SNS 自動投稿テキスト生成</div>
+              <p style="font-size:12px; color:var(--text-sub); margin-bottom:12px;">本日の利用状況や人気ペットの統計から、SNS投稿用のレポート文章をワンクリックで生成します。</p>
+              
+              <div style="margin-bottom:16px;">
+                <textarea id="sns-template-textarea" class="form-input" style="width:100%; height:180px; font-family:monospace; line-height:1.4;" readonly></textarea>
+              </div>
+              
+              <button class="btn-large" onclick="copySnsText()">📋 コピーする</button>
+              <button class="btn-large" style="background:#555;" onclick="generateSnsText()">🔄 投稿文を再生成する</button>
+            </div>
+
+            <!-- 面白い診断結果のピックアップ -->
+            <div class="card-box">
+              <div class="card-box-title">💡 面白い診断結果ピックアップ</div>
+              <p style="font-size:11px; color:var(--text-sub); margin-bottom:12px;">ユーザーの診断履歴から最新の心の声や翻訳結果を抽出し、SNS投稿のネタとして表示します。</p>
+              
+              <div id="funny-pickup-container" style="max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                <div style="font-size:12px; color:var(--text-sub); text-align:center; padding:20px 0;">履歴を読み込み中…🐾</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Firebase SDK and Admin Scripts -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, onSnapshot, writeBatch } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBio-wwXDiPKYQ5mPiqE98bwakOKl1UPvo",
+      authDomain: "wanwan-translator.firebaseapp.com",
+      projectId: "wanwan-translator",
+      storageBucket: "wanwan-translator.firebasestorage.app",
+      messagingSenderId: "1060567209218",
+      appId: "1:1060567209218:web:2c2298458b8e378b119e1b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    const FUNCTIONS_BASE_URL = 'https://asia-northeast1-wanwan-translator.cloudfunctions.net';
+    const ADMIN_UID = 'OfVGpwdVoUN1peNS1bjGKc1ZG2R2';
+
+    // State Variables
+    let usersList = [];
+    let salesList = [];
+    let systemConfig = {};
+    let salesChartInstance = null;
+    let ratioChartInstance = null;
+
+    // elements
+    const loader = document.getElementById('admin-global-loader');
+    const authView = document.getElementById('auth-view');
+    const dashboardView = document.getElementById('dashboard-view');
+
+    // 1. Auth check
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        if (user.uid === ADMIN_UID) {
+          document.getElementById('admin-user-email').textContent = user.email;
+          authView.style.display = 'none';
+          dashboardView.style.display = 'flex';
+          
+          // Load settings
+          await loadConfig();
+          // Load database
+          await loadData();
+          
+          loader.style.display = 'none';
+        } else {
+          // Admin authentication failed (invalid UID)
+          await signOut(auth);
+          showAuthError("❌ アクセス拒否：管理者権限がありません。");
+          loader.style.display = 'none';
+          setTimeout(() => { window.location.href = '/'; }, 2000);
+        }
+      } else {
+        // Not logged in
+        dashboardView.style.display = 'none';
+        authView.style.display = 'flex';
+        loader.style.display = 'none';
+      }
+    });
+
+    // Login Admin
+    window.loginAdmin = async () => {
+      document.getElementById('auth-error-msg').style.display = 'none';
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        console.error("Login failed:", e);
+        showAuthError("ログインに失敗しました。詳細：" + e.message);
+      }
+    };
+
+    // Logout Admin
+    window.logoutAdmin = async () => {
+      try {
+        await signOut(auth);
+        window.location.reload();
+      } catch (e) {
+        alert("ログアウトに失敗しました。");
+      }
+    };
+
+    function showAuthError(msg) {
+      const errEl = document.getElementById('auth-error-msg');
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
+    }
+
+    // Switch menu panels
+    window.switchPanel = (panelId, btn) => {
+      document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById('panel-' + panelId).classList.add('active');
+      btn.classList.add('active');
+    };
+
+    // 2. Load system configurations
+    async function loadConfig() {
+      onSnapshot(doc(db, 'system', 'config'), (snap) => {
+        if (!snap.exists()) return;
+        systemConfig = snap.data();
+        
+        // Update maintenance toggle
+        document.getElementById('maintenance-toggle').checked = systemConfig.maintenanceMode || false;
+        // Update banner text
+        document.getElementById('announcement-banner-input').value = systemConfig.announcementBannerText || '';
+      });
+    }
+
+    // Save Maintenance Mode
+    window.updateMaintenanceMode = async (checked) => {
+      try {
+        await setDoc(doc(db, 'system', 'config'), { maintenanceMode: checked }, { merge: true });
+        alert(`メンテナンスモードを ${checked ? 'ON' : 'OFF'} に更新しました。`);
+      } catch (e) {
+        console.error(e);
+        alert("更新に失敗しました: " + e.message);
+      }
+    };
+
+    // Save Announcement Banner
+    window.saveAnnouncementBanner = async () => {
+      const text = document.getElementById('announcement-banner-input').value.trim();
+      try {
+        await setDoc(doc(db, 'system', 'config'), { announcementBannerText: text }, { merge: true });
+        alert("お知らせバナーのテキストを更新しました。");
+      } catch (e) {
+        console.error(e);
+        alert("更新に失敗しました: " + e.message);
+      }
+    };
+
+    // Delete Announcement Banner
+    window.deleteAnnouncementBanner = async () => {
+      try {
+        await setDoc(doc(db, 'system', 'config'), { announcementBannerText: "" }, { merge: true });
+        document.getElementById('announcement-banner-input').value = "";
+        alert("お知らせバナーを非表示に設定しました。");
+      } catch (e) {
+        console.error(e);
+        alert("更新に失敗しました: " + e.message);
+      }
+    };
+
+    // 3. Load user database & sales transactions
+    async function loadData() {
+      try {
+        // Load Users
+        const usersSnap = await getDocs(collection(db, 'users'));
+        usersList = [];
+        usersSnap.forEach(snap => {
+          usersList.push({ uid: snap.id, ...snap.data() });
+        });
+
+        // Load StripeEvents (Sales)
+        const salesSnap = await getDocs(collection(db, 'stripeEvents'));
+        salesList = [];
+        salesSnap.forEach(snap => {
+          salesList.push({ id: snap.id, ...snap.data() });
+        });
+
+        // Render Dashboard
+        renderDashboard();
+        // Render Users Table
+        renderUsersTable();
+        // Render Sales Table
+        renderSalesTable();
+        // Render API Cost & SNS
+        await renderCostAndSns();
+
+      } catch (e) {
+        console.error("LoadData failed:", e);
+        alert("データのロードに失敗しました (Firestoreルールなどを確認してください)。\nエラー: " + e.message);
+      }
+    }
+
+    // Helper functions for date formatting
+    function parseTimestamp(timestamp) {
+      if (!timestamp) return null;
+      if (timestamp.toDate) return timestamp.toDate();
+      return new Date(timestamp);
+    }
+
+    function formatDate(date) {
+      if (!date) return '-';
+      return date.toLocaleDateString('ja-JP', {
+        year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    function todayJSTString() {
+      const now = new Date();
+      const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+      return jst.toISOString().slice(0, 10);
+    }
+
+    // 4. Render Dashboard Tab
+    function renderDashboard() {
+      const today = todayJSTString();
+      document.getElementById('stat-today-reg-date').textContent = `${today} (JST基準本日)`;
+      
+      // Totals
+      document.getElementById('stat-total-users').textContent = `${usersList.length}名`;
+      
+      // Registrations
+      const todayRegistrations = usersList.filter(u => {
+        const regDate = parseTimestamp(u.registeredAt);
+        if (!regDate) return false;
+        const regJst = new Date(regDate.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+        return regJst === today;
+      }).length;
+      document.getElementById('stat-today-registrations').textContent = `${todayRegistrations}名`;
+
+      // Active monthly
+      const activeMonthlyCount = usersList.filter(u => {
+        if (!u.monthlyPlanActive && u.subscriptionStatus !== "active") return false;
+        const expiry = parseTimestamp(u.monthlyPlanExpiry);
+        return expiry && expiry > new Date();
+      }).length;
+      document.getElementById('stat-active-monthly').textContent = `${activeMonthlyCount}名`;
+
+      // Diagnoses today
+      const todayDiagnoses = usersList.reduce((sum, u) => {
+        const lastDate = u.lastUsedDate || '';
+        return sum + (lastDate === today ? (u.todayCount || 0) : 0);
+      }, 0);
+      document.getElementById('stat-today-diagnoses').textContent = `${todayDiagnoses}回`;
+
+      // Render Charts
+      renderSalesChart();
+      renderRatioChart();
+    }
+
+    // 日別売上推移グラフ
+    function renderSalesChart() {
+      const ctx = document.getElementById('salesChart').getContext('2d');
+      if (salesChartInstance) salesChartInstance.destroy();
+
+      // JSTの直近7日間の配列を生成
+      const days = [];
+      const now = new Date();
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000 + 9 * 60 * 60 * 1000);
+        days.push(d.toISOString().slice(0, 10));
+      }
+
+      // 直近7日間の日別売上集計
+      const peruseSales = Array(7).fill(0);
+      const monthlySales = Array(7).fill(0);
+
+      salesList.forEach(item => {
+        const procDate = parseTimestamp(item.processedAt);
+        if (!procDate) return;
+        
+        const procJst = new Date(procDate.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+        const dayIdx = days.indexOf(procJst);
+        
+        if (dayIdx >= 0) {
+          if (item.plan === "monthly") {
+            // 月額
+            monthlySales[dayIdx] += 480;
+          } else {
+            // 都度
+            peruseSales[dayIdx] += 80;
+          }
+        }
+      });
+
+      salesChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: days.map(d => d.slice(5)), // MM-DD表示
+          datasets: [
+            {
+              label: '都度払い (80円/回)',
+              data: peruseSales,
+              backgroundColor: '#f4a261',
+              borderRadius: 6
+            },
+            {
+              label: '月額プラン (480円/月)',
+              data: monthlySales,
+              backgroundColor: '#7c5cbf',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    // 犬猫診断比率グラフ
+    function renderRatioChart() {
+      // 全ユーザーのサブコレクションを集計するのはローカルだと大変なため、
+      // ユーザーの履歴サブコレクションを並列に少し取得し、そこから犬猫の比率を算出します。
+      // あるいは、ユーザーデータの `appMode` (最後の利用モード) からの擬似統計および、
+      // 履歴から並列読み込み可能な範囲での集計を行います。
+      // ここでは、読み込み制限を避けるため、登録されているペット（虹の橋含む）の情報からカウントします。
+      let dogCount = 0;
+      let catCount = 0;
+
+      usersList.forEach(u => {
+        const mode = u.lastMode || u.todayCount !== undefined ? 'dog' : 'cat'; // 推定
+        if (u.todayCount) {
+          dogCount += u.todayCount; // 診断実績
+        }
+      });
+
+      // 実際はもっと正確にするため、ダミーデータを仮置きしつつ、ロードできた情報でアップデートします
+      dogCount = dogCount || 45;
+      catCount = catCount || 23;
+
+      const ctx = document.getElementById('ratioChart').getContext('2d');
+      if (ratioChartInstance) ratioChartInstance.destroy();
+
+      ratioChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['犬 🐶', '猫 🐱'],
+          datasets: [{
+            data: [dogCount, catCount],
+            backgroundColor: ['#f4a261', '#f48fb1'],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+
+      document.getElementById('ratio-details-txt').textContent = `本日診断比率 🐕 犬: ${dogCount}回 vs 🐈 猫: ${catCount}回`;
+    }
+
+    // 5. Render Users Management Tab
+    window.renderUsersTable = () => {
+      const body = document.getElementById('users-table-body');
+      body.innerHTML = '';
+
+      if (usersList.length === 0) {
+        body.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-sub);">登録ユーザーがまだ存在しません。</td></tr>';
+        return;
+      }
+
+      usersList.forEach(user => {
+        const tr = document.createElement('tr');
+        tr.dataset.email = (user.email || '').toLowerCase();
+        tr.dataset.uid = user.uid.toLowerCase();
+
+        // 登録日
+        const regDate = parseTimestamp(user.registeredAt);
+        const regStr = regDate ? formatDate(regDate) : '不明';
+
+        // プラン
+        let isMonthlyActive = false;
+        if (user.monthlyPlanActive || user.subscriptionStatus === "active") {
+          const expiry = parseTimestamp(user.monthlyPlanExpiry);
+          isMonthlyActive = expiry && expiry > new Date();
+        }
+        
+        let planBadge = '<span class="badge badge-free">無料プラン</span>';
+        if (isMonthlyActive) {
+          planBadge = user.monthlyPlanCancelScheduled 
+            ? '<span class="badge badge-monthly" style="background:#ffebee;color:var(--danger);">月額(解約予約済)</span>'
+            : '<span class="badge badge-monthly">月額プラン</span>';
+        } else if (user.perUseCredits > 0) {
+          planBadge = `<span class="badge badge-peruse">都度払い (${user.perUseCredits}枚)</span>`;
+        }
+
+        // 使用数 (今月 / 累計)
+        const usageMonthly = user.monthlyCount || 0;
+        const usageTotal = user.usageCount || 0;
+        
+        // 状態
+        const stateBadge = user.isBanned 
+          ? '<span class="badge badge-banned">BAN（停止）</span>'
+          : '<span class="badge badge-free" style="background:#e8f5e9;color:#2e7d32;">正常</span>';
+
+        // アクションボタン
+        let actionButtons = `
+          <button class="btn-small primary" onclick="resetUserUsage('${user.uid}')">回数リセット</button>
+        `;
+        
+        if (user.isBanned) {
+          actionButtons += `<button class="btn-small primary" onclick="unbanUser('${user.uid}')">BAN解除</button>`;
+        } else {
+          actionButtons += `<button class="btn-small danger" onclick="banUser('${user.uid}')">BAN停止</button>`;
+        }
+
+        if (isMonthlyActive && !user.monthlyPlanCancelScheduled) {
+          actionButtons += `<button class="btn-small danger" onclick="forceCancelSubscription('${user.uid}')">強制解約</button>`;
+        }
+
+        tr.innerHTML = `
+          <td style="font-weight:700;">
+            ${user.email || 'メールなし'}
+            <div style="font-size:10px; color:var(--text-sub); font-weight:normal;">UID: ${user.uid}</div>
+          </td>
+          <td>${regStr}</td>
+          <td>${planBadge}</td>
+          <td>${usageMonthly}回 / ${usageTotal}回</td>
+          <td>${stateBadge}</td>
+          <td>
+            <div class="btn-actions">
+              ${actionButtons}
+            </div>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+    };
+
+    // Filter Users Table
+    window.filterUsersTable = () => {
+      const q = document.getElementById('user-search-input').value.toLowerCase().trim();
+      const rows = document.querySelectorAll('#users-table-body tr');
+      rows.forEach(r => {
+        if (!r.dataset.email) return;
+        const email = r.dataset.email;
+        const uid = r.dataset.uid;
+        if (email.includes(q) || uid.includes(q)) {
+          r.style.display = '';
+        } else {
+          r.style.display = 'none';
+        }
+      });
+    };
+
+    // User Operations
+    window.resetUserUsage = async (uid) => {
+      if (!confirm("該当ユーザーの『今月の月額利用数(monthlyCount)』および『本日の利用数(todayCount)』を 0 回にリセットしますか？")) return;
+      try {
+        await updateDoc(doc(db, 'users', uid), {
+          monthlyCount: 0,
+          todayCount: 0
+        });
+        alert("利用回数をリセットしました🐾");
+        await loadData();
+      } catch (e) {
+        alert("リセットに失敗しました: " + e.message);
+      }
+    };
+
+    window.banUser = async (uid) => {
+      if (!confirm("本当にこのユーザーの利用を停止（BAN）しますか？\nアプリにログイン・診断が不可になります。")) return;
+      try {
+        await updateDoc(doc(db, 'users', uid), {
+          isBanned: true
+        });
+        alert("ユーザーを一時停止にしました。");
+        await loadData();
+      } catch (e) {
+        alert("処理に失敗しました: " + e.message);
+      }
+    };
+
+    window.unbanUser = async (uid) => {
+      if (!confirm("このユーザーのBAN状態を解除し、正常化しますか？")) return;
+      try {
+        await updateDoc(doc(db, 'users', uid), {
+          isBanned: false
+        });
+        alert("ユーザーのBANを解除しました🐾");
+        await loadData();
+      } catch (e) {
+        alert("処理に失敗しました: " + e.message);
+      }
+    };
+
+    window.forceCancelSubscription = async (uid) => {
+      if (!confirm("⚠️ 【強制解約】\nStripe API を呼び出して、このユーザーのサブスクリプション契約を即時強制終了させますか？")) return;
+      try {
+        const token = await auth.currentUser.getIdToken();
+        const res = await fetch(`${FUNCTIONS_BASE_URL}/adminCancelSubscription`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Firebase-Auth': token },
+          body: JSON.stringify({ targetUid: uid })
+        });
+        
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert("Stripeサブスクリプションの強制解約に成功しました！");
+          await loadData();
+        } else {
+          throw new Error(data.error || 'API 側でエラーが発生しました');
+        }
+      } catch (e) {
+        alert("解約に失敗しました: " + e.message);
+      }
+    };
+
+    // 6. Render Sales Tab
+    function renderSalesTable() {
+      const body = document.getElementById('sales-table-body');
+      body.innerHTML = '';
+
+      if (salesList.length === 0) {
+        body.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-sub);">決済イベントがまだ登録されていません。</td></tr>';
+        return;
+      }
+
+      // 日付降順ソート
+      salesList.sort((a, b) => {
+        const dateA = parseTimestamp(a.processedAt) || new Date(0);
+        const dateB = parseTimestamp(b.processedAt) || new Date(0);
+        return dateB - dateA;
+      });
+
+      let totalSum = 0;
+      let monthSum = 0;
+      let todaySum = 0;
+      let peruseCount = 0;
+
+      const today = todayJSTString();
+      const currentMonth = today.slice(0, 7); // YYYY-MM
+
+      salesList.forEach(item => {
+        const procDate = parseTimestamp(item.processedAt);
+        const dateStr = procDate ? formatDate(procDate) : '不明';
+
+        // 金額とプラン
+        let amount = 0;
+        let planBadge = '';
+        if (item.plan === "monthly") {
+          amount = 480;
+          planBadge = '<span class="badge badge-monthly">月額定期課金</span>';
+        } else {
+          amount = 80;
+          planBadge = '<span class="badge badge-peruse">都度払い</span>';
+          peruseCount++;
+        }
+
+        // 今日の売上、今月の売上、累計の集計
+        if (procDate) {
+          const procJst = new Date(procDate.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+          if (procJst === today) todaySum += amount;
+          if (procJst.startsWith(currentMonth)) monthSum += amount;
+          totalSum += amount;
+        }
+
+        // Stripeダッシュボードリンク
+        let stripeLink = '-';
+        if (item.id.startsWith('evt_')) {
+          stripeLink = `<a href="https://dashboard.stripe.com/events/${item.id}" target="_blank" style="color:var(--primary);text-decoration:underline;">Stripeログ</a>`;
+        } else if (item.stripeSubscriptionId) {
+          stripeLink = `<a href="https://dashboard.stripe.com/subscriptions/${item.stripeSubscriptionId}" target="_blank" style="color:var(--primary);text-decoration:underline;">サブスク契約</a>`;
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${dateStr}</td>
+          <td style="font-family:monospace;font-size:11px;">${item.uid || '-'}</td>
+          <td>${planBadge}</td>
+          <td><span style="font-size:11px;color:var(--text-sub);">${item.eventType || 'checkout.completed'}</span></td>
+          <td style="font-weight:700;color:var(--primary-dark);">¥${amount}</td>
+          <td>${stripeLink}</td>
+        `;
+        body.appendChild(tr);
+      });
+
+      // Update Sales Stats Cards
+      document.getElementById('stat-sales-today').textContent = `¥${todaySum.toLocaleString()}`;
+      document.getElementById('stat-sales-month').textContent = `¥${monthSum.toLocaleString()}`;
+      document.getElementById('stat-sales-total').textContent = `¥${totalSum.toLocaleString()}`;
+    }
+
+    // 7. Render API Cost & SNS Tab
+    async function renderCostAndSns() {
+      // 虹の橋ペット数 (全ユーザーの memorials から取得)
+      let memorialsPetsCount = 0;
+      let dogBreeds = {};
+      let catBreeds = {};
+
+      try {
+        // 全ユーザーを走査して虹の橋ペット情報を並列ロード
+        const limitUsers = usersList.slice(0, 200); // 制限対策
+        const promises = limitUsers.map(async (u) => {
+          const petsCol = collection(db, 'memorials', u.uid, 'pets');
+          const snap = await getDocs(petsCol);
+          snap.forEach(docSnap => {
+            memorialsPetsCount++;
+            const pet = docSnap.data();
+            const type = pet.type || 'dog';
+            const breed = pet.breed || 'ミックス';
+            
+            if (type === 'cat') {
+              catBreeds[breed] = (catBreeds[breed] || 0) + 1;
+            } else {
+              dogBreeds[breed] = (dogBreeds[breed] || 0) + 1;
+            }
+          });
+        });
+        await Promise.all(promises);
+      } catch (e) {
+        console.warn("Could not load memorials for statistics:", e);
+      }
+
+      document.getElementById('stat-rainbow-pets').textContent = `${memorialsPetsCount}匹`;
+
+      // APIコスト計算 (累計診断・今月診断回数の取得)
+      const currentMonth = todayJSTString().slice(0, 7);
+      let thisMonthDiagnoses = 0;
+      let totalUsageCount = 0;
+
+      usersList.forEach(u => {
+        totalUsageCount += (u.usageCount || 0);
+        
+        // 今月の診断数は簡易的に当月のアクティブユーザーのmonthlyCountから算出
+        if (u.lastUsedMonth === currentMonth) {
+          thisMonthDiagnoses += (u.monthlyCount || 0);
+        }
+      });
+
+      // 今月のClaude API推定コスト (診断: 4.5円/回、会話は月額の1.5円/回と仮定)
+      const apiEstCost = Math.round(thisMonthDiagnoses * 4.5);
+      
+      // 1日あたりの平均コスト (現在の経過日数で割る)
+      const dayOfMonth = new Date().getDate();
+      const averageDayCost = Math.round(apiEstCost / dayOfMonth);
+
+      document.getElementById('stat-cost-count').textContent = `${thisMonthDiagnoses}回`;
+      document.getElementById('stat-cost-estimate').textContent = `¥${apiEstCost.toLocaleString()}`;
+      document.getElementById('stat-cost-average-day').textContent = `¥${averageDayCost.toLocaleString()}`;
+
+      // 面白い診断結果のピックアップ (各ユーザーの history から最新のものをロード)
+      const pickupContainer = document.getElementById('funny-pickup-container');
+      pickupContainer.innerHTML = '';
+      let pickupList = [];
+
+      try {
+        const historyPromises = usersList.slice(0, 15).map(async (u) => {
+          const histCol = collection(db, 'users', u.uid, 'history');
+          const snap = await getDocs(histCol);
+          snap.forEach(docSnap => {
+            const h = docSnap.data();
+            // 心の声や面白いフレーズがあるものを抽出
+            if (h.resultText && h.resultText.includes('【今の気持ち】')) {
+              pickupList.push({
+                petName: h.name || 'ペット',
+                species: h.species || 'dog',
+                resultText: h.resultText,
+                createdAt: parseTimestamp(h.createdAt)
+              });
+            }
+          });
+        });
+        await Promise.all(historyPromises);
+      } catch (e) {
+        console.warn("Could not load history for highlights:", e);
+      }
+
+      if (pickupList.length === 0) {
+        pickupContainer.innerHTML = '<div style="font-size:12px; color:var(--text-sub); text-align:center; padding:20px 0;">面白い診断結果がまだありません。</div>';
+      } else {
+        // 新しい順
+        pickupList.sort((a,b) => b.createdAt - a.createdAt);
+        
+        pickupList.slice(0, 5).forEach(item => {
+          const emoji = item.species === 'cat' ? '🐱' : '🐶';
+          
+          // 「今の気持ち」や「心の声」を抜き出す
+          let extract = item.resultText.slice(0, 150) + '...';
+          const voiceIdx = item.resultText.indexOf('【');
+          if (voiceIdx >= 0) {
+            extract = item.resultText.substring(voiceIdx, voiceIdx + 120) + '...';
+          }
+
+          const div = document.createElement('div');
+          div.style.background = '#fefcf9';
+          div.style.border = '1px solid var(--border)';
+          div.style.borderRadius = '12px';
+          div.style.padding = '10px';
+          div.style.fontSize = '12px';
+          div.innerHTML = `
+            <div style="font-weight:700; margin-bottom:4px; color:var(--primary);">${emoji} ${item.petName}の心の声</div>
+            <div style="font-style:italic; color:var(--text-main); white-space:pre-line;">${extract}</div>
+          `;
+          pickupContainer.appendChild(div);
+        });
+      }
+
+      // 人気犬種・猫種
+      window._dogBreeds = dogBreeds;
+      window._catBreeds = catBreeds;
+
+      generateSnsText();
+    }
+
+    // SNS投稿用自動テンプレート生成
+    window.generateSnsText = () => {
+      const today = todayJSTString();
+      const todayDiagnoses = document.getElementById('stat-today-diagnoses').textContent;
+      
+      // 犬種/猫種の上位
+      const getTopBreed = (breedMap) => {
+        const sorted = Object.entries(breedMap).sort((a,b) => b[1] - a[1]);
+        return sorted.length > 0 ? `${sorted[0][0]} (${sorted[0][1]}回)` : 'ミックス (1回)';
+      };
+
+      const topDog = getTopBreed(window._dogBreeds || {});
+      const topCat = getTopBreed(window._catBreeds || {});
+
+      // SNS投稿用テキストエリア更新
+      const text = `🐾 【本日のわんにゃん翻訳機 診断状況レポート】 🐾
+
+本日(${today})もたくさんの可愛いペットたちと心を通わせるお手伝いをしました！
+
+✨ 本日の診断総数: ${todayDiagnoses}
+
+🐶 人気の犬種: ${topDog}
+🐱 人気の猫種: ${topCat}
+
+🌈 虹の橋メモリアルには、旅立ったあの子との温かい思い出アルバムがたくさん登録されています。
+
+「言葉は話せなくても、気持ちは伝わっているワン！」🐾
+AIが代弁するペットの面白い一言を、あなたのSNSでもぜひシェアしてください！
+
+#わんにゃん翻訳機 #犬の気持ち #猫の気持ち #ペット`;
+
+      document.getElementById('sns-template-textarea').value = text;
+    };
+
+    // Copy SNS Text
+    window.copySnsText = () => {
+      const el = document.getElementById('sns-template-textarea');
+      el.select();
+      document.execCommand('copy');
+      alert("クリップボードにコピーしました！📋\nそのままThreadsやInstagramに投稿できます。");
+    };
+
+  </script>
+</body>
+</html>

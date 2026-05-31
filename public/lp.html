@@ -976,6 +976,43 @@
     <p>&copy; 2026 わんにゃん翻訳機 🐾 Powered by Claude AI</p>
   </footer>
 
+  <!-- Firebase SDK for Maintenance Checking -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBio-wwXDiPKYQ5mPiqE98bwakOKl1UPvo",
+      authDomain: "wanwan-translator.firebaseapp.com",
+      projectId: "wanwan-translator",
+      storageBucket: "wanwan-translator.firebasestorage.app",
+      messagingSenderId: "1060567209218",
+      appId: "1:1060567209218:web:2c2298458b8e378b119e1b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // メンテナンスチェック
+    onAuthStateChanged(auth, async (user) => {
+      try {
+        const snap = await getDoc(doc(db, 'system', 'config'));
+        if (snap.exists()) {
+          const data = snap.data();
+          const isMaintenance = data.maintenanceMode || false;
+          const isAdmin = user && user.uid === 'OfVGpwdVoUN1peNS1bjGKc1ZG2R2';
+          if (isMaintenance && !isAdmin) {
+            window.location.href = '/maintenance.html';
+          }
+        }
+      } catch (e) {
+        console.warn("Maintenance check failed:", e);
+      }
+    });
+  </script>
+
   <script>
     // Scroll Reveal Animation helper
     document.addEventListener("DOMContentLoaded", function() {

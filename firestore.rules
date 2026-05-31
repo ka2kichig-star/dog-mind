@@ -2,12 +2,17 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ユーザードキュメント：本人のみ読み書き可
+    // 管理者判定ヘルパー (管理者UID：OfVGpwdVoUN1peNS1bjGKc1ZG2R2)
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == 'OfVGpwdVoUN1peNS1bjGKc1ZG2R2';
+    }
+
+    // ユーザードキュメント：本人のみ読み書き可、管理者は全ユーザー読込・変更可
     match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if (request.auth != null && request.auth.uid == uid) || isAdmin();
 
       match /history/{historyId} {
-        allow read, write: if request.auth != null && request.auth.uid == uid;
+        allow read, write: if (request.auth != null && request.auth.uid == uid) || isAdmin();
       }
     }
 
@@ -17,19 +22,31 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // 虹の橋：ペットメモリアル（本人のみ読み書き）
+    // 虹の橋：ペットメモリアル
     match /memorials/{uid}/pets/{petId} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if (request.auth != null && request.auth.uid == uid) || isAdmin();
     }
 
-    // 虹の橋：チャット履歴（本人のみ読み書き）
+    // 虹の橋：チャット履歴
     match /memorial_chats/{uid}/{petId}/messages/{messageId} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if (request.auth != null && request.auth.uid == uid) || isAdmin();
     }
 
-    // FCMトークン（本人のみ読み書き）
+    // FCMトークン
     match /fcmTokens/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if (request.auth != null && request.auth.uid == uid) || isAdmin();
+    }
+
+    // Stripe 決済完了イベント（管理者の売上集計・履歴確認用）
+    match /stripeEvents/{eventId} {
+      allow read: if isAdmin();
+      allow write: if false; // Functions(Admin SDK)からのみ書き込むためクライアントからは禁止
+    }
+
+    // システム設定（お知らせ・メンテナンス設定など）
+    match /system/{documentId} {
+      allow read: if true; // メンテナンスチェックやバナー取得のため全ユーザー許可
+      allow write: if isAdmin();
     }
   }
 }

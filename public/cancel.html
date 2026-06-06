@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>月額プランの解約 💳 | わんにゃん翻訳機</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#f4a261">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -136,6 +138,33 @@
       background: #c23325;
     }
 
+    .btn.disabled-btn {
+      background: #ccc !important;
+      color: #888 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      opacity: 0.7 !important;
+      border: none !important;
+    }
+
+    .sns-webview-banner {
+      width: 100%;
+      max-width: 480px;
+      background: #ffe5e5;
+      border: 2px solid #ff4d4d;
+      color: #cc0000;
+      padding: 12px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: bold;
+      border-radius: 12px;
+      margin: 12px auto;
+      box-shadow: 0 4px 12px rgba(255, 77, 77, 0.15);
+      font-family: 'Zen Maru Gothic', sans-serif;
+      z-index: 10;
+      position: relative;
+    }
+
     /* ===== Footer ===== */
     footer {
       margin-top: 40px;
@@ -190,9 +219,122 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    /* ===== Instagram Block Overlay ===== */
+    .instagram-block-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 24px;
+      text-align: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .instagram-block-content {
+      background: white;
+      border: 3px solid var(--primary);
+      border-radius: 24px;
+      padding: 32px 24px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+      color: #333;
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+
+    .instagram-block-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .instagram-block-content h2 {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--primary);
+      margin-bottom: 16px;
+    }
+
+    .instagram-block-content p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #555;
+      margin: 0;
+    }
+    /* ===== Toast Notification ===== */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+      width: 90%;
+      max-width: 320px;
+    }
+    .toast {
+      background: rgba(0,0,0,0.85);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      animation: toastFadeIn 0.3s ease-out;
+      opacity: 1;
+      transition: opacity 0.3s ease-out;
+      pointer-events: auto;
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+    .toast.error {
+      background: #ff5e5e;
+    }
+    .toast.success {
+      background: #2ec4b6;
+    }
+    @keyframes toastFadeIn {
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
   </style>
 </head>
 <body>
+
+  <!-- Splash Screen -->
+  <div id="splash-screen" style="position: fixed; inset: 0; background: linear-gradient(160deg, #fff8f0 0%, #fef3e2 100%); z-index: 100000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease-out;">
+    <div style="font-size: 80px; margin-bottom: 20px; animation: float 3s ease-in-out infinite;">🐶🐱</div>
+    <h2 style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 900; color: #7c5cbf; font-size: 28px;">わんにゃん翻訳機</h2>
+    <div style="margin-top: 20px; width: 40px; height: 40px; border: 4px solid rgba(124,92,191,0.2); border-left-color: #7c5cbf; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+  </div>
+
+  <!-- Offline Warning Banner -->
+  <div id="offline-banner" style="display:none; background: #555; color: #fff; text-align: center; padding: 10px; font-size: 13px; font-weight: bold; position: fixed; top: 0; left: 0; width: 100%; z-index: 10000; font-family: 'Zen Maru Gothic', sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+    ⚠️ インターネット接続が切断されました。オフラインモードで表示しています。🐾
+  </div>
+
+  <!-- WebView Warning Banner -->
+  <div id="webview-warning-banner" style="display:none; background: #fff2f2; border: 2px solid #ff7b93; color: #d63031; padding: 12px 16px; text-align: center; font-size: 13px; font-weight: bold; border-radius: 12px; margin: 12px auto; max-width: 480px; box-shadow: 0 4px 12px rgba(255, 123, 147, 0.15); position: relative; font-family: 'Zen Maru Gothic', sans-serif; align-items: center; justify-content: center; gap: 8px; z-index: 1000;">
+    <span>⚠️ LINEやSafari以外のアプリ内ブラウザ（WebView）ではGoogleログインが機能しません。右上のメニューから「デフォルトのブラウザで開く」を選択するか、URLをコピーしてSafari/Chrome等で開いてください。🐾</span>
+    <button onclick="copyCurrentURL()" style="background: #ff7b93; color: white; border: none; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: bold; cursor: pointer; margin-left: 8px; white-space: nowrap;">URLコピー</button>
+  </div>
+
+  <!-- WebView Warning Modal -->
+  <div id="instagram-block-overlay" class="instagram-block-overlay">
+    <div class="instagram-block-content">
+      <div class="instagram-block-icon">🐾</div>
+      <h2 id="webview-title">🐾 Safariで開いてください</h2>
+      <p id="webview-desc" style="margin-bottom: 24px;">Instagram/LINE等のアプリ内ブラウザでは<br>Googleログインができません。<br>下のボタンでSafariにコピーしてください。</p>
+      
+      <button id="copy-btn" onclick="handleCopyAndOpen()" class="btn" style="background:var(--primary); color:#fff; font-weight:700; border-radius:28px; padding:14px 24px; border:none; width:100%; margin-bottom:12px; cursor:pointer; font-family:inherit; transition: all 0.2s;">URLをコピーしてSafariで開く</button>
+      <button onclick="closeWebViewModal()" class="btn" style="background:#999; color:#fff; font-weight:700; border-radius:28px; padding:14px 24px; border:none; width:100%; cursor:pointer; font-family:inherit; transition: all 0.2s;">閉じる</button>
+    </div>
+  </div>
 
   <div class="container">
     <h1>月額プランの解約</h1>
@@ -209,7 +351,9 @@
       <div class="state-emoji">🔑</div>
       <div class="state-title">ログインが必要です</div>
       <p class="state-desc">解約手続きを進めるには、月額プランを契約しているGoogleアカウントでログインしてください。</p>
-      <button class="btn btn-google" onclick="loginWithGoogle()">Googleでログインする</button>
+      <!-- SNS WebView用警告バナー -->
+      <div class="sns-webview-banner" id="sns-webview-banner" style="display:none; margin-bottom: 12px;"></div>
+      <button class="btn btn-google" id="google-login-btn" onclick="loginWithGoogle()">Googleでログインする</button>
     </div>
 
     <!-- 3. 未契約表示 -->
@@ -263,7 +407,7 @@
         <a href="terms.html">利用規約</a>
         <a href="privacy.html">プライバシーポリシー</a>
         <a href="cancel.html">解約はこちら</a>
-        <a href="https://www.instagram.com/ka2kichig" target="_blank">お問い合わせ</a>
+        <a href="contact.html">お問い合わせ</a>
       </div>
       <p>&copy; 2026 わんにゃん翻訳機 🐾 Powered by Claude AI</p>
     </footer>
@@ -272,7 +416,7 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
-    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
     import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
 
     const firebaseConfig = {
@@ -284,10 +428,64 @@
       appId: "1:1060567209218:web:2c2298458b8e378b119e1b"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
+    let app, auth, db, provider;
+    try {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      setPersistence(auth, browserLocalPersistence).catch((err) => {
+        console.error("Failed to set persistence:", err);
+      });
+      db = getFirestore(app);
+      provider = new GoogleAuthProvider();
+    } catch (e) {
+      console.error("Firebase initialization failed:", e);
+      app = {};
+      auth = { onAuthStateChanged: () => {}, getRedirectResult: () => Promise.resolve() };
+      db = { collection: () => {}, doc: () => {} };
+      provider = {};
+      
+      document.addEventListener('DOMContentLoaded', () => {
+        const errBanner = document.createElement('div');
+        errBanner.style.cssText = 'background:#ffcccc; color:#cc0000; padding:12px; font-weight:bold; text-align:center; position:fixed; top:0; left:0; width:100%; z-index:10000; font-family:sans-serif;';
+        errBanner.textContent = '⚠️ サーバーとの通信初期化に失敗しました。ページを再読み込みしてください。🐾';
+        document.body.prepend(errBanner);
+      });
+    }
+
+    // Offline banner control
+    window.addEventListener('online', () => {
+      const banner = document.getElementById('offline-banner');
+      if (banner) banner.style.display = 'none';
+    });
+    window.addEventListener('offline', () => {
+      const banner = document.getElementById('offline-banner');
+      if (banner) banner.style.display = 'block';
+    });
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      document.addEventListener('DOMContentLoaded', () => {
+        const banner = document.getElementById('offline-banner');
+        if (banner) banner.style.display = 'block';
+      });
+    }
+
+    // ページロード時に残存リダイレクト結果を処理
+    getRedirectResult(auth).then((result) => {
+      if (result && result.user) {
+        if (window.showToast) {
+          window.showToast("ログインに成功しました🐾");
+        }
+      }
+    }).catch((e) => {
+      if (e.code !== 'auth/no-redirect-operation') {
+        console.error('[getRedirectResult] Error:', e.code, e.message);
+        const errMsg = 'Googleログインに失敗しました。詳細: ' + e.message;
+        if (window.showToast) {
+          window.showToast(errMsg, 'error');
+        } else {
+          alert(errMsg);
+        }
+      }
+    });
 
     const FUNCTIONS_BASE_URL = 'https://asia-northeast1-wanwan-translator.cloudfunctions.net';
 
@@ -301,15 +499,54 @@
     const expiryDateSuccessSpan = document.getElementById('expiry-date-success');
     const nosubCustomMsg = document.getElementById('nosub-custom-msg');
 
+    // Toast Notification utility
+    window.showToast = function(message, type = 'success') {
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 3000);
+    };
+
+    // Splash Screen fade out
+    window.addEventListener('load', () => {
+      const splash = document.getElementById('splash-screen');
+      if (splash) {
+        splash.style.opacity = '0';
+        setTimeout(() => {
+          splash.style.display = 'none';
+        }, 500);
+      }
+    });
+
     let currentUser = null;
 
     // Google Login logic
     window.loginWithGoogle = async () => {
+      // Check WebView environment first
+      if (window.isWebViewEnv && window.isWebViewEnv()) {
+        const msg = window.getWebViewWarningMessage ? window.getWebViewWarningMessage() : 'このアプリ内ブラウザではGoogleログインができません。外部ブラウザで開いてからログインしてください。';
+        alert(msg);
+        return;
+      }
+
       try {
-        await signInWithPopup(auth, provider);
+        await signInWithRedirect(auth, provider);
       } catch (e) {
         console.error('Login error:', e);
-        alert('ログインに失敗しました。');
+        alert('ログインに失敗しました: ' + e.message);
       }
     };
 
@@ -319,6 +556,12 @@
       const submitBtn = document.getElementById('submit-btn');
       submitBtn.disabled = true;
       submitBtn.textContent = '処理中...';
+
+      if (!confirm("本当に月額プランを解約しますか？\n解約後も有効期限までは引き続きすべての機能を使い放題でご利用いただけます。")) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '解約を完了する';
+        return;
+      }
 
       try {
         const token = await currentUser.getIdToken();
@@ -357,6 +600,29 @@
         currentUser = null;
         stateLoading.style.display = 'none';
         stateUnauth.style.display = 'block';
+
+        const loginBtn = document.getElementById('google-login-btn');
+        const snsBanner = document.getElementById('sns-webview-banner');
+        const isWv = window.isWebViewEnv && window.isWebViewEnv();
+        if (isWv) {
+          if (loginBtn) {
+            loginBtn.classList.add('disabled-btn');
+            loginBtn.setAttribute('disabled', 'true');
+          }
+          if (snsBanner) {
+            const msg = window.getWebViewWarningMessage && window.getWebViewWarningMessage();
+            if (msg) {
+              snsBanner.textContent = '⚠️ ' + msg;
+              snsBanner.style.display = 'block';
+            }
+          }
+        } else {
+          if (loginBtn) {
+            loginBtn.classList.remove('disabled-btn');
+            loginBtn.removeAttribute('disabled');
+          }
+          if (snsBanner) snsBanner.style.display = 'none';
+        }
         return;
       }
 
@@ -414,6 +680,154 @@
         stateUnauth.style.display = 'block';
       }
     });
+  </script>
+
+  <!-- WebView Detection and Redirect Warning Modal Helpers -->
+  <script>
+    (function() {
+      window.isWebViewEnv = function() {
+        const ua = navigator.userAgent;
+        // Check for specific apps: Instagram, FB_IAB, FBAV, FBAN, Line, Twitter, Threads, KAKAOTALK (case-insensitive)
+        return /instagram|fb_iab|fbav|fban|line|twitter|threads|kakaotalk/i.test(ua);
+      };
+
+      window.getWebViewWarningMessage = function() {
+        const ua = navigator.userAgent;
+        const uaLower = ua.toLowerCase();
+        if (uaLower.includes('line')) {
+          return '画面下の […] → ブラウザで開く　をタップしてください';
+        }
+        const hasThreads = ua.includes('Threads') || uaLower.includes('threads');
+        const hasInstagram = ua.includes('Instagram') || uaLower.includes('instagram');
+        if (hasThreads) {
+          return '右上の [⊙] → 外部ブラウザーで開く　をタップしてください';
+        }
+        if (hasInstagram) {
+          return '右上の […] → 外部ブラウザーで開く　をタップしてください';
+        }
+        if (uaLower.includes('twitter')) {
+          return '右上の […] → ブラウザで開く　をタップしてください';
+        }
+        if (window.isWebViewEnv()) {
+          return 'ブラウザアプリで開いてからログインしてください';
+        }
+        return null;
+      };
+
+      window.copyCurrentURL = async () => {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          alert('URLをクリップボードにコピーしました！Safari等のブラウザを開いて、アドレスバーに貼り付けてください🐾');
+        } catch (err) {
+          const tempInput = document.createElement('input');
+          tempInput.value = window.location.href;
+          document.body.appendChild(tempInput);
+          tempInput.select();
+          document.execCommand('copy');
+          document.body.removeChild(tempInput);
+          alert('URLをクリップボードにコピーしました！Safari等のブラウザを開いて、アドレスバーに貼り付けてください🐾');
+        }
+      };
+
+      window.handleCopyAndOpen = async () => {
+        const copyBtn = document.getElementById('copy-btn');
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+        } catch (err) {
+          const tempInput = document.createElement('input');
+          tempInput.value = window.location.href;
+          document.body.appendChild(tempInput);
+          tempInput.select();
+          document.execCommand('copy');
+          document.body.removeChild(tempInput);
+        }
+        if (copyBtn) {
+          copyBtn.textContent = 'コピーしました！Safariで貼り付けてください✅';
+          copyBtn.style.background = '#2ec4b6';
+        }
+      };
+
+      window.openInExternalBrowser = () => {
+        const ua = navigator.userAgent.toLowerCase();
+        const isIOS = /ipad|iphone|ipod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        
+        window.copyCurrentURL().then(() => {
+          if (isIOS) {
+            window.location.href = "safari-" + window.location.href;
+          } else {
+            window.open(window.location.href, '_system');
+            window.location.href = window.location.href;
+          }
+        });
+      };
+
+      window.closeWebViewModal = () => {
+        const overlay = document.getElementById('instagram-block-overlay');
+        if (overlay) {
+          overlay.style.display = 'none';
+        }
+      };
+
+      window.showWebViewModal = () => {
+        const overlay = document.getElementById('instagram-block-overlay');
+        if (overlay) {
+          overlay.style.display = 'flex';
+        }
+      };
+
+      function checkWebViewLoad() {
+        const overlay = document.getElementById('instagram-block-overlay');
+        const wvBanner = document.getElementById('webview-warning-banner');
+        const loginBtn = document.getElementById('google-login-btn');
+        const snsBanner = document.getElementById('sns-webview-banner');
+        if (window.isWebViewEnv()) {
+          if (wvBanner) {
+            wvBanner.style.display = 'none';
+          }
+          if (overlay) {
+            overlay.style.display = 'flex';
+          }
+          if (loginBtn) {
+            loginBtn.classList.add('disabled-btn');
+            loginBtn.setAttribute('disabled', 'true');
+          }
+          if (snsBanner) {
+            const msg = window.getWebViewWarningMessage();
+            if (msg) {
+              snsBanner.textContent = '⚠️ ' + msg;
+              snsBanner.style.display = 'block';
+            } else {
+              snsBanner.style.display = 'none';
+            }
+          }
+        } else {
+          if (snsBanner) {
+            snsBanner.style.display = 'none';
+          }
+          if (wvBanner) {
+            wvBanner.style.display = 'none';
+          }
+          if (overlay) {
+            overlay.style.display = 'none';
+          }
+          if (loginBtn) {
+            loginBtn.classList.remove('disabled-btn');
+            loginBtn.removeAttribute('disabled');
+          }
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', checkWebViewLoad);
+      } else {
+        checkWebViewLoad();
+      }
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    })();
   </script>
 </body>
 </html>

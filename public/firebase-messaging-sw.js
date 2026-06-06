@@ -15,7 +15,6 @@ const messaging = firebase.messaging();
 
 // バックグラウンド通知を受信した場合の処理
 messaging.onBackgroundMessage(function(payload) {
-  console.log('[firebase-messaging-sw.js] バックグラウンド通知受信: ', payload);
   const notificationTitle = payload.notification?.title || '🌈 虹の橋からお知らせ';
   const notificationOptions = {
     body: payload.notification?.body || '',

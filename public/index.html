@@ -10,6 +10,9 @@
   <meta property="og:description" content="AIがあなたの愛犬・愛猫の気持ちを代弁。虹の橋でお別れしたペットの思い出も大切に。">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://wanwan-translator.web.app">
+  <meta name="keywords" content="わんにゃん翻訳機,ペット翻訳,犬の気持ち,猫の気持ち,AIペット診断,虹の橋,ペットチャット,ペット写真分析,ペット感情診断,ペットエンタメ">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#f4a261">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap"
@@ -899,6 +902,41 @@
       opacity: 0.9;
     }
 
+    .login-banner.disabled {
+      background: #ccc !important;
+      color: #888 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      opacity: 0.7 !important;
+    }
+
+    .btn.disabled-btn {
+      background: #ccc !important;
+      color: #888 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      opacity: 0.7 !important;
+      border: none !important;
+    }
+
+    .sns-webview-banner {
+      width: 100%;
+      max-width: 480px;
+      background: #ffe5e5;
+      border: 2px solid #ff4d4d;
+      color: #cc0000;
+      padding: 12px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: bold;
+      border-radius: 12px;
+      margin: 12px auto;
+      box-shadow: 0 4px 12px rgba(255, 77, 77, 0.15);
+      font-family: 'Zen Maru Gothic', sans-serif;
+      z-index: 10;
+      position: relative;
+    }
+
     .usage-badge {
       text-align: center;
       padding: 8px;
@@ -909,13 +947,11 @@
       position: relative;
     }
 
-    /* ===== Floating Ticket Badge Card ===== */
+    /* ===== Ticket Badge Card (Relative layout for page flow) ===== */
     .ticket-badge-card {
-      position: fixed;
-      top: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 90%;
+      position: relative;
+      margin: 12px auto;
+      width: 100%;
       max-width: 320px;
       background: linear-gradient(135deg, #ffd700, #ff8c00);
       color: #fff;
@@ -926,7 +962,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      z-index: 1100;
+      z-index: 10;
       animation: slideDown 0.3s ease-out;
       border: 2px solid #fff;
     }
@@ -947,8 +983,8 @@
     }
 
     @keyframes badgePulse {
-      0% { transform: translate(-50%, 0) scale(1); }
-      100% { transform: translate(-50%, 0) scale(1.03); }
+      0% { transform: scale(1); }
+      100% { transform: scale(1.03); }
     }
 
     .usage-badge.monthly-active {
@@ -1007,8 +1043,8 @@
     }
 
     @keyframes slideDown {
-      from { transform: translate(-50%, -100%); opacity: 0; }
-      to { transform: translate(-50%, 0); opacity: 1; }
+      from { transform: translateY(-12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
 
     /* ===== Pay Modal ===== */
@@ -1879,10 +1915,127 @@
     body.cat-mode .history-detail {
       border-top-color: #ffe3e8;
     }
+    /* ===== Instagram Block Overlay ===== */
+    .instagram-block-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 24px;
+      text-align: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .instagram-block-content {
+      background: white;
+      border: 3px solid var(--primary);
+      border-radius: 24px;
+      padding: 32px 24px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+      color: #333;
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+
+    .instagram-block-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .instagram-block-content h2 {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--primary);
+      margin-bottom: 16px;
+    }
+
+    .instagram-block-content p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #555;
+      margin: 0;
+    }
+    /* ===== Toast Notification ===== */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+      width: 90%;
+      max-width: 320px;
+    }
+    .toast {
+      background: rgba(0,0,0,0.85);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      animation: toastFadeIn 0.3s ease-out;
+      opacity: 1;
+      transition: opacity 0.3s ease-out;
+      pointer-events: auto;
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+    .toast.error {
+      background: #ff5e5e;
+    }
+    .toast.success {
+      background: #2ec4b6;
+    }
+    @keyframes toastFadeIn {
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 
 <body>
+
+  <!-- Splash Screen -->
+  <div id="splash-screen" style="position: fixed; inset: 0; background: linear-gradient(160deg, #fff8f0 0%, #fef3e2 100%); z-index: 100000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease-out;">
+    <div style="font-size: 80px; margin-bottom: 20px; animation: float 3s ease-in-out infinite;">🐶🐱</div>
+    <h2 style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 900; color: #f4a261; font-size: 28px;">わんにゃん翻訳機</h2>
+    <div style="margin-top: 20px; width: 40px; height: 40px; border: 4px solid rgba(244,162,97,0.2); border-left-color: #f4a261; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+  </div>
+
+  <!-- Offline Warning Banner -->
+  <div id="offline-banner" style="display:none; background: #555; color: #fff; text-align: center; padding: 10px; font-size: 13px; font-weight: bold; position: fixed; top: 0; left: 0; width: 100%; z-index: 10000; font-family: 'Zen Maru Gothic', sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+    ⚠️ インターネット接続が切断されました。オフラインモードで表示しています。🐾
+  </div>
+
+  <!-- WebView Warning Banner -->
+  <div id="webview-warning-banner" style="display:none; background: #fff2f2; border: 2px solid #ff7b93; color: #d63031; padding: 12px 16px; text-align: center; font-size: 13px; font-weight: bold; border-radius: 12px; margin: 12px auto; max-width: 480px; box-shadow: 0 4px 12px rgba(255, 123, 147, 0.15); position: relative; font-family: 'Zen Maru Gothic', sans-serif; align-items: center; justify-content: center; gap: 8px; z-index: 1000;">
+    <span>⚠️ LINEやSafari以外のアプリ内ブラウザ（WebView）ではGoogleログインが機能しません。右上のメニューから「デフォルトのブラウザで開く」を選択するか、URLをコピーしてSafari/Chrome等で開いてください。🐾</span>
+    <button onclick="copyCurrentURL()" style="background: #ff7b93; color: white; border: none; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: bold; cursor: pointer; margin-left: 8px; white-space: nowrap;">URLコピー</button>
+  </div>
+
+  <!-- WebView Warning Modal -->
+  <div id="instagram-block-overlay" class="instagram-block-overlay">
+    <div class="instagram-block-content">
+      <div class="instagram-block-icon">🐾</div>
+      <h2 id="webview-title">🐾 Safariで開いてください</h2>
+      <p id="webview-desc" style="margin-bottom: 24px;">Instagram/LINE等のアプリ内ブラウザでは<br>Googleログインができません。<br>下のボタンでSafariにコピーしてください。</p>
+      
+      <button id="copy-btn" onclick="handleCopyAndOpen()" class="btn" style="background:var(--primary); color:#fff; font-weight:700; border-radius:28px; padding:14px 24px; border:none; width:100%; margin-bottom:12px; cursor:pointer; font-family:inherit; transition: all 0.2s;">URLをコピーしてSafariで開く</button>
+      <button onclick="closeWebViewModal()" class="btn" style="background:#999; color:#fff; font-weight:700; border-radius:28px; padding:14px 24px; border:none; width:100%; cursor:pointer; font-family:inherit; transition: all 0.2s;">閉じる</button>
+    </div>
+  </div>
 
   <!-- アプリ紹介への固定ボタン -->
   <a href="/lp.html" class="floating-info-btn">🏠 アプリ紹介</a>
@@ -1911,6 +2064,9 @@
     <button class="notif-close" style="color: #d63031; background:none; border:none; cursor:pointer; font-weight:bold; position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size: 16px;"
       onclick="document.getElementById('system-banner').style.display='none'">×</button>
   </div>
+
+  <!-- SNS WebView用警告バナー -->
+  <div class="sns-webview-banner" id="sns-webview-banner" style="display:none;"></div>
 
   <!-- ログインバナー -->
   <div class="login-banner" id="login-banner" style="display:none">
@@ -2121,7 +2277,7 @@
         <div id="tab-chat" class="tab-panel">
           <div class="chat-start" id="chat-start">
             <div class="big-emoji">🐕</div>
-            <h3>愛犬の名前を教えてね</h3>
+            <h3 id="chat-start-title">愛犬の名前を教えてね</h3>
             <input class="name-input" id="dog-name" type="text" placeholder="例：ポチ、モコ、ハナ…"
               onkeydown="if(event.key==='Enter')checkAndRun('startChat')" oninput="updateSubmitButtons()">
             <span class="label">性別（任意）</span>
@@ -2325,44 +2481,36 @@
     <div class="pay-box">
       <div style="font-size:44px;margin-bottom:10px">🐾</div>
       <h3>診断回数を追加する</h3>
-      <p>お試し期間終了後は、以下のプランをお選びください</p>
+      <p id="pay-modal-desc">お試し期間終了後は、以下のプランをお選びください</p>
 
       <!-- プラン選択カード -->
       <div class="pay-plan-cards" id="pay-plan-cards">
         <!-- 都度払い -->
-        <div class="pay-plan-card" onclick="selectPayPlan('stripe-peruse')" id="plan-stripe-peruse">
+        <div class="pay-plan-card" id="plan-stripe-peruse" style="cursor: default;">
           <div class="pay-plan-title">💳 都度払い（クレジットカード）</div>
           <div class="pay-plan-price">80<span style="font-size:14px;font-weight:700">円/回</span></div>
-          <div class="pay-plan-desc">1回ずつ支払い。気軽に使えます</div>
+          <div class="pay-plan-desc" style="margin-bottom: 12px;">1回ずつ支払い。気軽に使えます</div>
+          <button class="stripe-peruse-btn" id="stripe-peruse-btn" onclick="startStripe('peruse')" style="width: 100%; box-sizing: border-box;">💳 クレカで80円払う</button>
         </div>
 
         <!-- 月額プラン -->
-        <div class="pay-plan-card monthly" onclick="selectPayPlan('stripe-monthly')" id="plan-stripe-monthly">
+        <div class="pay-plan-card monthly" id="plan-stripe-monthly" style="cursor: default;">
           <div class="pay-plan-badge">🔥 おすすめ</div>
           <div class="pay-plan-title">💜 月額プラン（クレジットカード）</div>
           <div class="pay-plan-price">480<span style="font-size:14px;font-weight:700">円/月</span></div>
-          <div class="pay-plan-desc">
+          <div class="pay-plan-desc" style="margin-bottom: 12px;">
             月100回まで利用可能（1日平均3回ペース）<br>
             診断・チャット・行動診断すべて対象
             <div style="font-size:11px;color:#888;margin-top:2px">※月100回上限・毎月1日リセット</div>
           </div>
+          <button class="stripe-btn" id="stripe-btn" onclick="startStripe('monthly')" style="width: 100%; box-sizing: border-box;">💳 クレカで月額480円</button>
+          <div style="font-size:11px;color:#888;margin-top:6px;text-align:center;">決済完了後すぐに使い放題になります</div>
         </div>
       </div>
 
       <!-- 虹の橋は無料の案内 -->
       <div style="font-size:12px;color:#a084ca;padding:8px 0;background:#faf4ff;border-radius:12px;margin-bottom:12px">
         🌈 虹の橋機能は完全無料でご利用いただけます
-      </div>
-
-      <!-- Stripe都度払い支払いボタン -->
-      <div id="stripe-peruse-pay-section" style="display:none">
-        <button class="stripe-peruse-btn" id="stripe-peruse-btn" onclick="startStripe('peruse')">💳 クレカで80円払う</button>
-      </div>
-
-      <!-- Stripe月額支払いボタン -->
-      <div id="stripe-monthly-pay-section" style="display:none">
-        <button class="stripe-btn" id="stripe-btn" onclick="startStripe('monthly')">💳 クレカで月額480円（Stripe）</button>
-        <div style="font-size:11px;color:#bbb;margin-top:6px">決済完了後すぐに使い放題になります</div>
       </div>
 
       <button class="cancel-btn" onclick="closeModal()">キャンセル</button>
@@ -2401,10 +2549,33 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
-    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
     import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, serverTimestamp, collection, addDoc, query, orderBy, getDocs, deleteDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
     import { getStorage, ref as storageRef, uploadString, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js';
     import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging.js';
+
+    // Instagram WebView の強制警告モーダル（DOMContentLoaded 前に表示）
+    const isInstagram = /instagram/i.test(navigator.userAgent);
+    if (isInstagram) {
+      const modalHtml = `
+        <div id="instagram-force-modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:99999; display:flex; align-items:center; justify-content:center; padding:24px; backdrop-filter:blur(4px);">
+          <div style="background:white; border:3px solid #f4a261; border-radius:24px; padding:32px 24px; max-width:400px; width:100%; box-shadow:0 20px 40px rgba(0,0,0,0.3); text-align:center; font-family:'Zen Maru Gothic', sans-serif; color:#333;">
+            <div style="font-size:48px; margin-bottom:16px;">📱</div>
+            <h2 style="font-size:22px; font-weight:900; color:#f4a261; margin-bottom:16px;">📱 外部ブラウザで開いてください</h2>
+            <p style="font-size:14px; line-height:1.6; color:#555; margin:0 0 24px 0; text-align:left; white-space:pre-line;">アプリ内ブラウザではGoogleログインができません。
+右上の「…」をタップして「Safariで開く」を選択してください。</p>
+            <button onclick="document.getElementById('instagram-force-modal').remove()" style="background:#999; color:white; font-weight:700; border-radius:28px; padding:14px 24px; border:none; width:100%; cursor:pointer; font-family:inherit; font-size:16px; transition:all 0.2s;">閉じる</button>
+          </div>
+        </div>
+      `;
+      if (document.body) {
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+      } else {
+        document.addEventListener('DOMContentLoaded', () => {
+          document.body.insertAdjacentHTML('beforeend', modalHtml);
+        });
+      }
+    }
 
     const firebaseConfig = {
       apiKey: "AIzaSyBio-wwXDiPKYQ5mPiqE98bwakOKl1UPvo",
@@ -2415,11 +2586,38 @@
       appId: "1:1060567209218:web:2c2298458b8e378b119e1b"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
-    const provider = new GoogleAuthProvider();
+    let app, auth, db, storage, provider;
+    try {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      setPersistence(auth, browserLocalPersistence).catch((err) => {
+        console.error("Failed to set persistence:", err);
+      });
+      db = getFirestore(app);
+      storage = getStorage(app);
+      provider = new GoogleAuthProvider();
+    } catch (e) {
+      console.error("Firebase initialization failed:", e);
+      // Dummy fallbacks to prevent crash
+      app = {};
+      auth = { currentUser: null, onAuthStateChanged: () => {}, getRedirectResult: () => Promise.resolve() };
+      db = { collection: () => {}, doc: () => {} };
+      storage = {};
+      provider = {};
+      
+      document.addEventListener('DOMContentLoaded', () => {
+        // WebView判定がtrueの場合はFirebase初期化エラーバナーを表示しない
+        const isWv = /instagram|fb_iab|fbav|fban|line|twitter|threads|kakaotalk/i.test(navigator.userAgent);
+        if (isWv) {
+          console.log("WebView detected, skipping Firebase init error banner.");
+          return;
+        }
+        const errBanner = document.createElement('div');
+        errBanner.style.cssText = 'background:#ffcccc; color:#cc0000; padding:12px; font-weight:bold; text-align:center; position:fixed; top:0; left:0; width:100%; z-index:10000; font-family:sans-serif;';
+        errBanner.textContent = '⚠️ サーバーとの通信初期化に失敗しました。ページを再読み込みしてください。🐾';
+        document.body.prepend(errBanner);
+      });
+    }
 
     // グローバルに公開
     window._auth = auth;
@@ -2427,14 +2625,16 @@
     window._storage = storage;
     window._provider = provider;
     window._signInWithPopup = signInWithPopup;
+    window._signInWithRedirect = signInWithRedirect;
+    window._getRedirectResult = getRedirectResult;
     window._signOut = signOut;
     window.logoutWithFirebase = async function() {
       try {
         await signOut(auth);
-        alert("ログアウトしました🐾");
+        window.showToast("ログアウトしました🐾");
       } catch (e) {
         console.error("Logout error:", e);
-        alert("ログアウトに失敗しました。");
+        window.showToast("ログアウトに失敗しました。", "error");
       }
     };
     window._doc = doc;
@@ -2453,6 +2653,67 @@
     window._storageRef = storageRef;
     window._uploadString = uploadString;
     window._getDownloadURL = getDownloadURL;
+
+    // Toast Notification utility
+    window.showToast = function(message, type = 'success') {
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 3000);
+    };
+
+    // Splash Screen fade out
+    window.addEventListener('load', () => {
+      const splash = document.getElementById('splash-screen');
+      if (splash) {
+        splash.style.opacity = '0';
+        setTimeout(() => {
+          splash.style.display = 'none';
+        }, 500);
+      }
+    });
+
+    // Retry logic helper
+    window.runWithRetry = async function(fn, maxRetries = 3, baseDelay = 1000) {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          return await fn();
+        } catch (err) {
+          if (attempt === maxRetries) throw err;
+          const delay = baseDelay * Math.pow(2, attempt - 1) * (0.8 + Math.random() * 0.4);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    };
+
+    // Offline banner control
+    window.addEventListener('online', () => {
+      const banner = document.getElementById('offline-banner');
+      if (banner) banner.style.display = 'none';
+    });
+    window.addEventListener('offline', () => {
+      const banner = document.getElementById('offline-banner');
+      if (banner) banner.style.display = 'block';
+    });
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      document.addEventListener('DOMContentLoaded', () => {
+        const banner = document.getElementById('offline-banner');
+        if (banner) banner.style.display = 'block';
+      });
+    }
 
     // システム設定（メンテナンスモード、お知らせバナー）の監視
     onSnapshot(doc(db, 'system', 'config'), (snap) => {
@@ -2493,7 +2754,6 @@
       window._getToken = getToken;
       // フォアグラウンド通知
       onMessage(messaging, (payload) => {
-        console.log('FCM message:', payload);
         if (Notification.permission === 'granted') {
           new Notification(payload.notification?.title || '🌈 虹の橋', {
             body: payload.notification?.body || '',
@@ -2502,7 +2762,7 @@
         }
       });
     } catch (e) {
-      console.log('FCM not supported:', e);
+      // FCM not supported
     }
 
     window.todayJST = function () {
@@ -2547,68 +2807,44 @@
       }
     };
 
-    onAuthStateChanged(auth, async (user) => {
-      const banner = document.getElementById('login-banner');
+    window.refreshUserUI = async function() {
+      const user = auth.currentUser;
+      if (!user) return;
+      const ref = doc(db, 'users', user.uid);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) return;
+
+      const data = snap.data();
+      const today = window.todayJST();
+      const lastUsedDate = data.lastUsedDate || '';
+      let todayCount = lastUsedDate === today ? (data.todayCount || 0) : 0;
+      if (lastUsedDate !== today) {
+        await updateDoc(ref, { todayCount: 0, lastUsedDate: today });
+        todayCount = 0;
+      }
+      const perUseCredits = data.perUseCredits || 0;
+
+      // 月額プラン有効チェック
+      let isMonthlyActive = false;
+      if ((data.monthlyPlanActive || data.subscriptionStatus === "active") && data.monthlyPlanExpiry) {
+        const expiry = data.monthlyPlanExpiry?.toDate ? data.monthlyPlanExpiry.toDate() : null;
+        isMonthlyActive = expiry && expiry > new Date();
+      }
+
+      // 月額カウント管理
+      const currentMonth = window.todayJST().slice(0, 7);
+      const lastUsedMonth = data.lastUsedMonth || '';
+      const monthlyLimit = data.monthlyLimit || 100;
+      let monthlyCount = lastUsedMonth === currentMonth ? (data.monthlyCount || 0) : 0;
+      if (lastUsedMonth !== currentMonth && isMonthlyActive) {
+        await updateDoc(ref, { monthlyCount: 0, lastUsedMonth: currentMonth });
+        monthlyCount = 0;
+      }
+
+      window.updateTicketBadgeUI(perUseCredits, isMonthlyActive, monthlyCount, monthlyLimit);
+
       const badge = document.getElementById('usage-badge');
-      const logoutBtn = document.getElementById('logout-btn');
-      const cancelBtn = document.getElementById('cancel-menu-btn');
-
-      if (user) {
-        banner.style.display = 'none';
-        if (logoutBtn) logoutBtn.style.display = 'flex';
-        if (cancelBtn) cancelBtn.style.display = 'flex';
-        const ref = doc(db, 'users', user.uid);
-        let snap = await getDoc(ref);
-        const today = window.todayJST();
-
-        // 登録日時の確認と保存
-        if (!snap.exists()) {
-          await setDoc(ref, {
-            registeredAt: serverTimestamp(),
-            lastUsedDate: today,
-            todayCount: 0,
-            usageCount: 0
-          });
-          snap = await getDoc(ref);
-        } else if (!snap.data().registeredAt) {
-          await updateDoc(ref, { registeredAt: serverTimestamp() });
-          snap = await getDoc(ref);
-        }
-
-        const data = snap.data();
-        if (data && data.isBanned) {
-          alert('🚨 利用規約違反または管理者により、このアカウントは利用停止されています。');
-          await signOut(auth);
-          window.location.reload();
-          return;
-        }
-        const lastUsedDate = data.lastUsedDate || '';
-        let todayCount = lastUsedDate === today ? (data.todayCount || 0) : 0;
-        if (lastUsedDate !== today) {
-          await updateDoc(ref, { todayCount: 0, lastUsedDate: today });
-          todayCount = 0;
-        }
-        const perUseCredits = data.perUseCredits || 0;
-
-        // 月額プラン有効チェック
-        let isMonthlyActive = false;
-        if ((data.monthlyPlanActive || data.subscriptionStatus === "active") && data.monthlyPlanExpiry) {
-          const expiry = data.monthlyPlanExpiry?.toDate ? data.monthlyPlanExpiry.toDate() : null;
-          isMonthlyActive = expiry && expiry > new Date();
-        }
-
-        // 月額カウント管理
-        const currentMonth = window.todayJST().slice(0, 7);
-        const lastUsedMonth = data.lastUsedMonth || '';
-        const monthlyLimit = data.monthlyLimit || 100;
-        let monthlyCount = lastUsedMonth === currentMonth ? (data.monthlyCount || 0) : 0;
-        if (lastUsedMonth !== currentMonth && isMonthlyActive) {
-          await updateDoc(ref, { monthlyCount: 0, lastUsedMonth: currentMonth });
-          monthlyCount = 0;
-        }
-
-        window.updateTicketBadgeUI(perUseCredits, isMonthlyActive, monthlyCount, monthlyLimit);
-
+      if (badge) {
         // 登録日（お試し開始日）からの日数計算
         const regDate = data.registeredAt?.toDate ? data.registeredAt.toDate() : new Date();
         const diffTime = Math.abs(new Date() - regDate);
@@ -2636,6 +2872,48 @@
             badge.textContent = '⚠️ お試し期間（1週間）が終了しました｜診断には80円が必要です';
           }
         }
+      }
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      const banner = document.getElementById('login-banner');
+      const badge = document.getElementById('usage-badge');
+      const logoutBtn = document.getElementById('logout-btn');
+      const cancelBtn = document.getElementById('cancel-menu-btn');
+
+      if (user) {
+        banner.style.display = 'none';
+        const snsBanner = document.getElementById('sns-webview-banner');
+        if (snsBanner) snsBanner.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'flex';
+        if (cancelBtn) cancelBtn.style.display = 'flex';
+        const ref = doc(db, 'users', user.uid);
+        let snap = await getDoc(ref);
+        const today = window.todayJST();
+
+        // 登録日時の確認と保存
+        if (!snap.exists()) {
+          await setDoc(ref, {
+            registeredAt: serverTimestamp(),
+            lastUsedDate: today,
+            todayCount: 0,
+            usageCount: 0
+          });
+          snap = await getDoc(ref);
+        } else if (!snap.data().registeredAt) {
+          await updateDoc(ref, { registeredAt: serverTimestamp() });
+          snap = await getDoc(ref);
+        }
+
+        const data = snap.data();
+        if (data && data.isBanned) {
+          alert('🚨 利用規約違反または管理者により、このアカウントは利用停止されています。');
+          await signOut(auth);
+          window.location.reload();
+          return;
+        }
+
+        await window.refreshUserUI();
 
         // ペット一覧のロード（虹の橋）
         window._currentUser = user;
@@ -2643,6 +2921,22 @@
         // 命日・誕生日チェック
         checkAnniversary(user);
       } else {
+        const isWv = window.isWebViewEnv && window.isWebViewEnv();
+        if (isWv) {
+          banner.classList.add('disabled');
+          const snsBanner = document.getElementById('sns-webview-banner');
+          if (snsBanner) {
+            const msg = window.getWebViewWarningMessage && window.getWebViewWarningMessage();
+            if (msg) {
+              snsBanner.textContent = '⚠️ ' + msg;
+              snsBanner.style.display = 'block';
+            }
+          }
+        } else {
+          banner.classList.remove('disabled');
+          const snsBanner = document.getElementById('sns-webview-banner');
+          if (snsBanner) snsBanner.style.display = 'none';
+        }
         banner.style.display = 'block';
         badge.classList.remove('monthly-active');
         badge.textContent = '';
@@ -2653,6 +2947,39 @@
       }
       // ログイン状態が変わったらボタンの有効無効を更新
       updateSubmitButtons();
+    });
+
+    // ページロード時に残存リダイレクト結果を処理
+    getRedirectResult(auth).then(async (result) => {
+      if (result && result.user) {
+        const user = result.user;
+        const ref = doc(db, 'users', user.uid);
+        let snap = await getDoc(ref);
+        const today = window.todayJST ? window.todayJST() : new Date().toISOString().slice(0, 10);
+        if (!snap.exists()) {
+          await setDoc(ref, {
+            registeredAt: serverTimestamp(),
+            lastUsedDate: today,
+            todayCount: 0,
+            usageCount: 0
+          });
+        } else if (!snap.data().registeredAt) {
+          await updateDoc(ref, { registeredAt: serverTimestamp() });
+        }
+        if (window.showToast) {
+          window.showToast("Googleログインに成功しました🐾");
+        }
+      }
+    }).catch((e) => {
+      if (e.code !== 'auth/no-redirect-operation') {
+        console.error('[getRedirectResult] Error:', e.code, e.message);
+        const errMsg = 'Googleログインに失敗しました。詳細: ' + e.message;
+        if (window.showToast) {
+          window.showToast(errMsg, 'error');
+        } else {
+          alert(errMsg);
+        }
+      }
     });
   </script>
 
@@ -2786,6 +3113,13 @@
     // Auth
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     async function loginWithGoogle(source) {
+      // Check WebView environment first
+      if (window.isWebViewEnv && window.isWebViewEnv()) {
+        const msg = window.getWebViewWarningMessage ? window.getWebViewWarningMessage() : 'このアプリ内ブラウザではGoogleログインができません。外部ブラウザで開いてからログインしてください。';
+        alert(msg);
+        return;
+      }
+
       const bannerCheckbox = document.getElementById('terms-checkbox');
       const historyCheckbox = document.getElementById('terms-checkbox-history');
       
@@ -2802,10 +3136,10 @@
       }
 
       try {
-        await window._signInWithPopup(window._auth, window._provider);
+        await window._signInWithRedirect(window._auth, window._provider);
       } catch (e) {
-        console.error('Login error:', e);
-        alert('ログインに失敗しました。もう一度お試しください。');
+        console.error('[loginWithGoogle] Login failed with error:', e.code, e.message);
+        alert('ログインに失敗しました。もう一度お試しください。\nエラー詳細: ' + e.message);
       }
     }
 
@@ -2819,6 +3153,48 @@
     let dogBreed = '';
     let dogName = '';
     let appMode = 'dog'; // 'dog' or 'cat'
+
+    // ==========================================
+    // ⚠️ CRITICAL UI - DO NOT REMOVE OR MODIFY
+    // [PROTECT: CRITICAL BEHAVIOR DIAGNOSIS STATE]
+    // DO NOT MOVE OR DELETE these variables.
+    // They must be initialized at the top of the script
+    // to prevent TDZ (Temporal Dead Zone) ReferenceError
+    // during asynchronous early initialization.
+    // ==========================================
+    let selectedBehaviors = [];
+
+    // ⚠️ CRITICAL UI - DO NOT REMOVE OR MODIFY
+    const DOG_BEHAVIORS = [
+      { id: 'bark_short', label: 'ワン！（短く1回）' },
+      { id: 'bark_repeat', label: 'ワンワン！（連続）' },
+      { id: 'whine', label: 'クーン...（甘え鳴き）' },
+      { id: 'growl', label: 'ウゥ...（唸り）' },
+      { id: 'tail_wag', label: 'しっぽをブンブン振る' },
+      { id: 'tail_down', label: 'しっぽを下げている' },
+      { id: 'ears_back', label: '耳を後ろに倒している' },
+      { id: 'rolling', label: 'ゴロンとお腹を見せる' },
+      { id: 'licking', label: '顔をペロペロ舐める' },
+      { id: 'staring', label: 'じっと見つめてくる' },
+      { id: 'circling', label: 'くるくる回っている' },
+      { id: 'hiding', label: '隅っこに隠れている' }
+    ];
+
+    // ⚠️ CRITICAL UI - DO NOT REMOVE OR MODIFY
+    const CAT_BEHAVIORS = [
+      { id: 'meow', label: 'ニャー！' },
+      { id: 'purr', label: 'ゴロゴロ...' },
+      { id: 'hiss', label: 'シャー！' },
+      { id: 'trill', label: 'クルル...' },
+      { id: 'tail_swish', label: 'しっぽをパタパタ' },
+      { id: 'tail_puff', label: 'しっぽを膨らませる' },
+      { id: 'ears_back_cat', label: '耳を後ろに倒す' },
+      { id: 'belly_up_cat', label: 'お腹を見せる' },
+      { id: 'licking_cat', label: '顔を舐めてくる' },
+      { id: 'staring_cat', label: 'じっと見つめる' },
+      { id: 'circling_cat', label: 'くるくる回る' },
+      { id: 'hiding_cat', label: '隅っこに隠れる' }
+    ];
 
     // アクティブなタブを検知して、そのタブのプレフィックスを返す
     function getActiveTabPrefix() {
@@ -3018,36 +3394,7 @@
       });
     }
 
-    const DOG_BEHAVIORS = [
-      { id: 'bark_short', label: 'ワン！（短く1回）' },
-      { id: 'bark_repeat', label: 'ワンワン！（連続）' },
-      { id: 'whine', label: 'クーン…（甘え鳴き）' },
-      { id: 'growl', label: 'ウゥ…（唸り）' },
-      { id: 'tail_wag', label: 'しっぽをブンブン振る' },
-      { id: 'tail_down', label: 'しっぽを下げている' },
-      { id: 'ears_back', label: '耳を後ろに倒している' },
-      { id: 'rolling', label: 'ゴロンとお腹を見せる' },
-      { id: 'licking', label: '顔をペロペロ舐める' },
-      { id: 'staring', label: 'じっと見つめてくる' },
-      { id: 'circling', label: 'くるくる回っている' },
-      { id: 'hiding', label: '隅っこに隠れている' },
-    ];
 
-    const CAT_BEHAVIORS = [
-      { id: 'meow_short', label: 'ニャー（短く鳴く）' },
-      { id: 'purr', label: 'ゴロゴロ（喉を鳴らす）' },
-      { id: 'hiss', label: 'フシャー！（威嚇）' },
-      { id: 'chirping', label: 'ケケケッ（クラッキング）' },
-      { id: 'tail_up', label: 'しっぽを垂直に立てる' },
-      { id: 'tail_thump', label: 'しっぽをパタパタ振る' },
-      { id: 'airplane_ears', label: '耳をイカ耳にする' },
-      { id: 'stretch', label: 'のびをする' },
-      { id: 'rubbing', label: 'すりすりしてくる' },
-      { id: 'kneading', label: 'ふみふみ（マッサージ）する' },
-      { id: 'belly_up', label: 'お腹を見せてゴロンとする' },
-      { id: 'climbing', label: '高いところに登る' },
-      { id: 'hiding_cat', label: '隅っこに隠れている' }
-    ];
 
     function renderBehaviorChips() {
       const container = document.getElementById('behavior-chips');
@@ -3082,8 +3429,8 @@
           const ext = mimeType.includes('png') ? 'png' : 'jpg';
           const path = `history/${user.uid}/${Date.now()}.${ext}`;
           const sRef = window._storageRef(window._storage, path);
-          await window._uploadString(sRef, photoBase64, 'base64', { contentType: mimeType });
-          photoUrl = await window._getDownloadURL(sRef);
+          await window.runWithRetry(() => window._uploadString(sRef, photoBase64, 'base64', { contentType: mimeType }));
+          photoUrl = await window.runWithRetry(() => window._getDownloadURL(sRef));
         }
 
         const historyData = {
@@ -3098,7 +3445,7 @@
         };
 
         const historyCol = window._collection(window._db, 'users', user.uid, 'history');
-        await window._addDoc(historyCol, historyData);
+        await window.runWithRetry(() => window._addDoc(historyCol, historyData));
 
         // 20件制限クリーンアップ
         const q = window._query(historyCol, window._orderBy('createdAt', 'desc'));
@@ -3121,13 +3468,19 @@
       if (!wrap) return;
 
       if (!user) {
+        const isWv = window.isWebViewEnv && window.isWebViewEnv();
+        const warningMsg = isWv ? window.getWebViewWarningMessage() : '';
+        const bannerHtml = isWv ? `<div class="sns-webview-banner" style="margin-bottom:12px;">⚠️ ${warningMsg}</div>` : '';
+        const disabledAttr = isWv ? 'disabled class="btn disabled-btn"' : 'class="btn"';
+
         wrap.innerHTML = `
           <div class="empty-state">
             <div class="empty-icon">🔑</div>
             <p>診断履歴を見るにはログインが必要です</p>
+            ${bannerHtml}
             <div style="margin-top: 10px; margin-bottom: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 13px;">
               <div style="display: flex; align-items: center; gap: 6px;">
-                <input type="checkbox" id="terms-checkbox-history" style="cursor: pointer;">
+                <input type="checkbox" id="terms-checkbox-history" style="cursor: pointer;" ${isWv ? 'disabled' : ''}>
                 <label for="terms-checkbox-history" style="cursor: pointer;">
                   <a href="/terms.html" target="_blank" style="color: #6c5ce7; text-decoration: underline; font-weight: bold;">利用規約</a>に同意してログインする
                 </label>
@@ -3136,7 +3489,7 @@
                 ※ 未成年者のご利用は保護者の同意が必要です
               </div>
             </div>
-            <button class="btn" style="max-width:200px; margin-left:auto; margin-right:auto;" onclick="loginWithGoogle('history')">ログインする</button>
+            <button ${disabledAttr} style="max-width:200px; margin-left:auto; margin-right:auto;" onclick="loginWithGoogle('history')">ログインする</button>
           </div>`;
         return;
       }
@@ -3354,18 +3707,6 @@
       }
     }
 
-    let _selectedPlan = ''; // 'paypay' or 'stripe'
-
-    function selectPayPlan(plan) {
-      _selectedPlan = plan;
-      // カードのスタイル更新
-      document.getElementById('plan-stripe-peruse').style.borderWidth = plan === 'stripe-peruse' ? '3px' : '2px';
-      document.getElementById('plan-stripe-monthly').style.borderWidth = plan === 'stripe-monthly' ? '3px' : '2px';
-      // ボタン表示切替
-      document.getElementById('stripe-peruse-pay-section').style.display = plan === 'stripe-peruse' ? 'block' : 'none';
-      document.getElementById('stripe-monthly-pay-section').style.display = plan === 'stripe-monthly' ? 'block' : 'none';
-    }
-
     async function checkAndRun(action) {
       const user = window._auth?.currentUser;
       if (!user) {
@@ -3383,12 +3724,13 @@
       let perUseCredits = 0;
       const currentMonth = window.todayJST().slice(0, 7);
       let monthlyCount = 0;
+      let monthlyLimit = 100;
 
       if (snap.exists()) {
         const data = snap.data();
         if (data.isBanned) {
           alert('🚨 利用規約違反または管理者により、このアカウントは利用停止されています。');
-          await signOut(auth);
+          await window._signOut(window._auth);
           window.location.reload();
           return;
         }
@@ -3409,84 +3751,28 @@
 
         // 月額カウント管理
         const lastUsedMonth = data.lastUsedMonth || '';
-        const monthlyLimit = data.monthlyLimit || 100;
+        monthlyLimit = data.monthlyLimit || 100;
         monthlyCount = lastUsedMonth === currentMonth ? (data.monthlyCount || 0) : 0;
-        if (lastUsedMonth !== currentMonth && isMonthlyActive) {
-          await window._setDoc(ref, { monthlyCount: 0, lastUsedMonth: currentMonth }, { merge: true });
-          monthlyCount = 0;
-        }
       }
 
-      // 1週間（7日間）の試用期間内かつ、当日の診断回数が3回未満なら無料
-      if (isTrialPeriod && todayCount < 3) {
-        const newCount = todayCount + 1;
-        await window._setDoc(ref, { todayCount: newCount, lastUsedDate: today, usageCount: window._increment(1) }, { merge: true });
+      const hasTrialRemaining = isTrialPeriod && todayCount < 3;
+      const hasMonthlyRemaining = isMonthlyActive && monthlyCount < monthlyLimit;
+      const hasPerUseCredits = perUseCredits > 0;
 
-        const remainingDays = 8 - diffDays;
-        document.getElementById('usage-badge').textContent = newCount < 3
-          ? `今日${newCount}回診断済み｜お試し期間（あと${remainingDays}日）あと${3 - newCount}回無料`
-          : `今日${newCount}回診断済み｜次回から80円（お試し残${remainingDays}日）`;
-
-        runAction(action);
-      } else if (isMonthlyActive && monthlyCount < monthlyLimit) {
-        // 月額プラン有効かつ上限未満：カウント増加して実行
-        const newMonthlyCount = monthlyCount + 1;
-        await window._setDoc(ref, {
-          todayCount: todayCount + 1,
-          lastUsedDate: today,
-          usageCount: window._increment(1),
-          monthlyCount: newMonthlyCount,
-          lastUsedMonth: currentMonth
-        }, { merge: true });
-
-        const remaining = monthlyLimit - newMonthlyCount;
-        document.getElementById('usage-badge').textContent = remaining > 0
-          ? `💜 月額プラン｜今月あと${remaining}回診断できます（今日${todayCount + 1}回診断済み）`
-          : `⚠️ 月額プランの上限（${monthlyLimit}回）に達しました｜追加診断には都度払い（80円/回）をご利用ください`;
-        window.updateTicketBadgeUI(perUseCredits, true, newMonthlyCount, monthlyLimit);
-        runAction(action);
-      } else if (perUseCredits > 0) {
-        // 都度払いクレジットあり：クレジットを減らし、カウント増加して実行
-        const newCredits = perUseCredits - 1;
-        await window._setDoc(ref, {
-          perUseCredits: newCredits,
-          todayCount: todayCount + 1,
-          lastUsedDate: today,
-          usageCount: window._increment(1)
-        }, { merge: true });
-
-        window.updateTicketBadgeUI(newCredits, isMonthlyActive, monthlyCount, monthlyLimit);
-
-        if (newCredits > 0) {
-          document.getElementById('usage-badge').textContent = `✅ 追加診断チケットがあります（残り${newCredits}回）🐾`;
-        } else {
-          if (isTrialPeriod) {
-            const remainingDays = 8 - diffDays;
-            document.getElementById('usage-badge').textContent = `今日${todayCount + 1}回診断済み｜次回から80円（お試し残${remainingDays}日）`;
-          } else {
-            document.getElementById('usage-badge').textContent = '⚠️ お試し期間（1週間）が終了しました｜診断には80円が必要です';
-          }
-        }
+      if (hasTrialRemaining || hasMonthlyRemaining || hasPerUseCredits) {
         runAction(action);
       } else {
         pendingAction = action;
-        _selectedPlan = '';
 
         // 月額上限到達時のモーダル制御
-        const payModalDesc = document.querySelector('#pay-modal .pay-box > p');
+        const payModalDesc = document.getElementById('pay-modal-desc');
         const monthlyCard = document.getElementById('plan-stripe-monthly');
         if (isMonthlyActive && monthlyCount >= monthlyLimit) {
           if (payModalDesc) payModalDesc.textContent = `今月の月額プラン上限（${monthlyLimit}回）に達しました。追加で診断するには都度払い（80円/回）をご利用ください。`;
           if (monthlyCard) monthlyCard.style.display = 'none';
-          selectPayPlan('stripe-peruse');
         } else {
           if (payModalDesc) payModalDesc.textContent = "お試し期間終了後は、以下のプランをお選びください";
           if (monthlyCard) monthlyCard.style.display = 'block';
-          // ボタン表示をリセット
-          document.getElementById('stripe-peruse-pay-section').style.display = 'none';
-          document.getElementById('stripe-monthly-pay-section').style.display = 'none';
-          document.getElementById('plan-stripe-peruse').style.borderWidth = '2px';
-          document.getElementById('plan-stripe-monthly').style.borderWidth = '2px';
         }
 
         document.getElementById('pay-modal').classList.add('show');
@@ -3505,7 +3791,6 @@
       const spBtn = document.getElementById('stripe-peruse-btn');
       if (spBtn) { spBtn.textContent = '💳 クレカで80円払う'; spBtn.disabled = false; }
       pendingAction = null;
-      _selectedPlan = '';
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -3554,7 +3839,7 @@
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Claude API 呼び出し
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    async function callClaude(messages, system) {
+    async function callClaude(messages, system, isFollowUp = false) {
       const user = window._auth?.currentUser;
       if (!user) throw new Error('ログインが必要です');
       // getIdToken(true) でキャッシュを使わずに最新のIDトークンを強制取得
@@ -3565,13 +3850,22 @@
           'Content-Type': 'application/json',
           'X-Firebase-Auth': token
         },
-        body: JSON.stringify({ messages, system })
+        body: JSON.stringify({ messages, system, isFollowUp })
       });
       const data = await res.json();
       if (!res.ok) {
-        const err = new Error(data.error || 'API error');
+        if (res.status === 402 || data.error === 'INSUFFICIENT_CREDITS') {
+          alert('診断クレジットが不足しています。追加チケットのご購入または月額プランへの登録をお願いします。🐾');
+          await window.refreshUserUI();
+          document.getElementById('pay-modal').classList.add('show');
+        }
+        const err = new Error(data.message || data.error || 'API error');
         err.status = res.status;
+        err.code = data.error;
         throw err;
+      }
+      if (!isFollowUp) {
+        await window.refreshUserUI();
       }
       return data.text || '…';
     }
@@ -3687,7 +3981,6 @@
       const petLabel = appMode === 'cat' ? '猫' : '犬';
 
       try {
-        console.log('[analyzePhoto] 開始 - imageMediaType:', imageMediaType, 'base64長:', imageBase64.length);
         const text = await callClaude([{
           role: 'user',
           content: [
@@ -3698,7 +3991,6 @@
           appMode === 'cat'
             ? `あなたは猫の行動・表情・姿勢の専門家です。写真から猫の感情状態を読み取り、以下の形式で答えてください：\n\n【今の気持ち】：一言で\n【感情メーター】：喜び○%・興奮○%・不安○%・眠気○%（合計100%）\n【猫の心の声】：猫自身が話しているように、2〜3文で（日本語、タメ口、語尾に「にゃ」「にゃん」をつけて可愛く）\n【アドバイス】：飼い主へ一言\n\n${personalityPrompt}\n\n絵文字を使って温かみのある文章にしてください。`
             : `あなたは犬の行動・表情・姿勢の専門家です。写真から犬の感情状態を読み取り、以下の形式で答えてください：\n\n【今の気持ち】：一言で\n【感情メーター】：喜び○%・興奮○%・不安○%・眠気○%（合計100%）\n【犬の心の声】：犬自身が話しているように、2〜3文で（日本語、タメ口、可愛く）\n【アドバイス】：飼い主へ一言\n\n${personalityPrompt}\n\n絵文字を使って温かみのある文章にしてください。`);
-        console.log('[analyzePhoto] 成功');
         showResult('photo-result', text);
         await saveToHistory('photo', text, imageBase64);
       } catch (e) {
@@ -3717,7 +4009,10 @@
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // 行動診断
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    let selectedBehaviors = [];
+    // [PROTECT: CRITICAL BEHAVIOR DIAGNOSIS STATE]
+    // The declaration of selectedBehaviors has been moved to the top of the script
+    // to prevent TDZ ReferenceError. Do not redeclare here.
+    // let selectedBehaviors = [];
 
     async function analyzeBehavior() {
       if (selectedBehaviors.length === 0) return;
@@ -3785,6 +4080,10 @@
       const input = document.getElementById('chat-input');
       const text = input.value.trim();
       if (!text) return;
+      if (text.length > 500) {
+        alert('メッセージは500文字以内で入力してください。🐾');
+        return;
+      }
       input.value = '';
       document.getElementById('send-btn').disabled = true;
       chatHistory.push({ role: 'user', content: text });
@@ -3799,7 +4098,8 @@
           chatHistory,
           appMode === 'cat'
             ? `あなたは「${dogNameVal}」という名前の猫です。飼い主と会話しています。猫らしく、気まぐれに、感情豊かに話してください。語尾に「にゃ」「にゃん」をつけて可愛く話す。短め（2〜4文）で返答する。絵文字を使う。\n\n${personalityPrompt}`
-            : `あなたは「${dogNameVal}」という名前の犬です。飼い主と会話しています。犬らしく、感情豊かに話してください。短め（2〜4文）で返答する。絵文字を使う。\n\n${personalityPrompt}`
+            : `あなたは「${dogNameVal}」という名前の犬です。飼い主と会話しています。犬らしく、感情豊かに話してください。短め（2〜4文）で返答する。絵文字を使う。\n\n${personalityPrompt}`,
+          true
         );
         typingEl.remove();
         chatHistory.push({ role: 'assistant', content: reply });
@@ -3853,8 +4153,29 @@
     </div>`;
     }
 
+
+
+    // WebView判定と警告モーダル
+    const isWebView = /(iPhone|iPod|iPad|Android).*AppleWebKit(?!.*Safari)|(wv|WebView)/i.test(navigator.userAgent);
+    const isGoogleLogin = () => {
+      const p = new URLSearchParams(window.location.search);
+      return p.has('login') || p.has('stripe');
+    };
+
+    if (isWebView && isGoogleLogin()) {
+      document.body.insertAdjacentHTML('beforeend', `
+        <div id="webview-modal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
+          <div style="background:#fff;padding:20px;border-radius:15px;max-width:400px;text-align:center;">
+            <p>ご利用の環境ではGoogleログインが制限されている場合があります。</p>
+            <p>うまくログインできない場合は、右上のメニュー等から<b>「ブラウザで開く」</b>を選択して再度お試しください。</p>
+            <button onclick="document.getElementById('webview-modal').style.display='none'" style="margin-top:15px;padding:10px 20px;background:#ff9900;border:none;color:white;border-radius:5px;cursor:pointer;">閉じる</button>
+          </div>
+        </div>
+      `);
+    }
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // PayPay リダイレクト後の処理
+    // Stripe 決済後の処理
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     (function checkPaymentReturn() {
       const params = new URLSearchParams(window.location.search);
@@ -3878,7 +4199,7 @@
             const checkInterval = 1500;
             
             const checkSubscription = async () => {
-              const currentUser = auth.currentUser || (uid ? { uid } : null);
+              const currentUser = window._auth.currentUser || (uid ? { uid } : null);
               if (!currentUser) {
                 // ログイン状態がまだ確立していない場合は1秒待って再試行
                 attempts++;
@@ -3891,8 +4212,8 @@
               }
               
               try {
-                const ref = doc(db, 'users', currentUser.uid);
-                const snap = await getDoc(ref);
+                const ref = window._doc(window._db, 'users', currentUser.uid);
+                const snap = await window._getDoc(ref);
                 if (snap.exists()) {
                   const data = snap.data();
                   let isMonthlyActive = false;
@@ -3950,7 +4271,7 @@
             const checkInterval = 1500;
             
             const checkCredits = async () => {
-              const currentUser = auth.currentUser || (uid ? { uid } : null);
+              const currentUser = window._auth.currentUser || (uid ? { uid } : null);
               if (!currentUser) {
                 attempts++;
                 if (attempts < maxAttempts) {
@@ -3960,8 +4281,8 @@
               }
               
               try {
-                const ref = doc(db, 'users', currentUser.uid);
-                const snap = await getDoc(ref);
+                const ref = window._doc(window._db, 'users', currentUser.uid);
+                const snap = await window._getDoc(ref);
                 if (snap.exists()) {
                   const data = snap.data();
                   const perUseCredits = data.perUseCredits || 0;
@@ -4070,7 +4391,15 @@
       if (!user) { loginWithGoogle(); return; }
       const name = document.getElementById('reg-name').value.trim();
       if (!name) { alert('名前を入力してください'); return; }
+      if (name.length > 50) { alert('名前は50文字以内で入力してください'); return; }
       if (!_selectedType) { alert('種類を選択してください'); return; }
+
+      const personality = document.getElementById('reg-personality').value.trim();
+      const favorites = document.getElementById('reg-favorites').value.trim();
+      const memories = document.getElementById('reg-memories').value.trim();
+      if (personality.length > 500) { alert('性格は500文字以内で入力してください'); return; }
+      if (favorites.length > 500) { alert('好きなものは500文字以内で入力してください'); return; }
+      if (memories.length > 1000) { alert('思い出は1000文字以内で入力してください'); return; }
 
       const btn = document.getElementById('reg-save-btn');
       btn.disabled = true; btn.textContent = '保存中…';
@@ -4085,8 +4414,8 @@
           const ext = mimeType.includes('png') ? 'png' : 'jpg';
           const path = `memorials/${user.uid}/${Date.now()}_${i}.${ext}`;
           const ref = window._storageRef(window._storage, path);
-          await window._uploadString(ref, base64, 'base64', { contentType: mimeType });
-          const url = await window._getDownloadURL(ref);
+          await window.runWithRetry(() => window._uploadString(ref, base64, 'base64', { contentType: mimeType }));
+          const url = await window.runWithRetry(() => window._getDownloadURL(ref));
           photoUrls.push(url);
         }
 
@@ -4096,17 +4425,17 @@
           type: _selectedType,
           birthday: document.getElementById('reg-birthday').value || null,
           passedDate: document.getElementById('reg-passeddate').value || null,
-          personality: document.getElementById('reg-personality').value.trim(),
-          favorites: document.getElementById('reg-favorites').value.trim(),
-          memories: document.getElementById('reg-memories').value.trim(),
+          personality,
+          favorites,
+          memories,
           photos: photoUrls,
           createdAt: window._serverTimestamp(),
         };
 
         const petsCol = window._collection(window._db, 'memorials', user.uid, 'pets');
-        await window._addDoc(petsCol, petData);
+        await window.runWithRetry(() => window._addDoc(petsCol, petData));
 
-        alert(`🌈 ${name}ちゃんを登録しました`);
+        window.showToast(`🌈 ${name}ちゃんを登録しました`);
         hideRegisterForm();
         loadPets();
       } catch (e) {
@@ -4264,7 +4593,8 @@
         }],
           pet
             ? `あなたは「${pet.name}」という名前の${pet.type}の霊です。虹の橋からこの写真を見て、飼い主に向けて話しかけてください。${pet.personality ? '性格：' + pet.personality : ''}${pet.favorites ? '好きだったこと：' + pet.favorites : ''}。温かく愛情深く、短めに（3〜5文）。絵文字を使って。`
-            : `あなたは写真に写っているペットの霊です。虹の橋からこの瞬間を振り返って、飼い主に向けて温かく話しかけてください。短めに（3〜5文）、絵文字を使って。`
+            : `あなたは写真に写っているペットの霊です。虹の橋からこの瞬間を振り返って、飼い主に向けて温かく話しかけてください。短めに（3〜5文）、絵文字を使って。`,
+          true
         );
         document.getElementById('modal-speak-loading').style.display = 'none';
         document.getElementById('modal-speak-text').innerHTML = escHtml(text);
@@ -4278,6 +4608,7 @@
       const user = window._currentUser;
       if (!user) return;
       const comment = document.getElementById('modal-comment-input').value.trim();
+      if (comment.length > 200) { window.showToast('コメントは200文字以内で入力してください', 'error'); return; }
       const petId = _modalPetId;
       const idx = _modalPhotoIdx;
       if (petId === null || idx === null) return;
@@ -4286,12 +4617,12 @@
         const snap = await window._getDoc(ref);
         const existing = snap.exists() ? (snap.data().photoComments || {}) : {};
         existing[idx] = comment;
-        await window._updateDoc(ref, { photoComments: existing });
+        await window.runWithRetry(() => window._updateDoc(ref, { photoComments: existing }));
         // アルバム再描画
         renderAlbum(petId);
-        alert('コメントを保存しました 💜');
+        window.showToast('コメントを保存しました 💜');
       } catch (e) {
-        alert('保存に失敗しました');
+        window.showToast('保存に失敗しました', 'error');
         console.error(e);
       }
     }
@@ -4388,6 +4719,10 @@
       const input = document.getElementById('rb-chat-input');
       const text = input.value.trim();
       if (!text) return;
+      if (text.length > 500) {
+        alert('メッセージは500文字以内で入力してください。🐾');
+        return;
+      }
       input.value = '';
       document.getElementById('rb-send-btn').disabled = true;
 
@@ -4408,7 +4743,7 @@ ${pet.memories ? '思い出：' + pet.memories : ''}
 短め（2〜4文）で返答。絵文字を使う。日本語でタメ口。`;
 
       try {
-        const reply = await callClaude(_rbChatHistory[petId], systemPrompt);
+        const reply = await callClaude(_rbChatHistory[petId], systemPrompt, true);
         typingEl.remove();
         _rbChatHistory[petId].push({ role: 'assistant', content: reply });
         appendBubble('rb-messages', 'dog', reply, getPetEmoji(pet.type));
@@ -4426,7 +4761,7 @@ ${pet.memories ? '思い出：' + pet.memories : ''}
       if (!user) return;
       try {
         const msgsCol = window._collection(window._db, 'memorial_chats', user.uid, petId, 'messages');
-        await window._addDoc(msgsCol, { role, content, createdAt: window._serverTimestamp() });
+        await window.runWithRetry(() => window._addDoc(msgsCol, { role, content, createdAt: window._serverTimestamp() }));
       } catch (e) { console.error('saveRbChatMessage error:', e); }
     }
 
@@ -4588,13 +4923,13 @@ ${pet.memories ? '思い出：' + pet.memories : ''}
           // トークンをFirestoreに保存
           if (window._currentUser && token) {
             const ref = window._doc(window._db, 'fcmTokens', window._currentUser.uid);
-            await window._setDoc(ref, { token, updatedAt: window._serverTimestamp() }, { merge: true });
+            await window.runWithRetry(() => window._setDoc(ref, { token, updatedAt: window._serverTimestamp() }, { merge: true }));
           }
-          alert('通知を有効化しました！命日・誕生日にお知らせします 🌈');
+          window.showToast('通知を有効化しました！命日・誕生日にお知らせします 🌈');
           document.getElementById('anniversary-banner').style.display = 'none';
         }
       } catch (e) {
-        console.log('Notification permission error:', e);
+        // Notification permission error
       }
     }
 
@@ -4608,6 +4943,152 @@ ${pet.memories ? '思い出：' + pet.memories : ''}
       if (path.startsWith('/memorial/')) {
         // 虹の橋モードに自動切替
         setTimeout(() => setMode('rainbow'), 300);
+      }
+    })();
+
+    // WebView Detection and Redirect Warning Modal
+    (function() {
+      window.isWebViewEnv = function() {
+        const ua = navigator.userAgent;
+        // Check for specific apps: Instagram, FB_IAB, FBAV, FBAN, Line, Twitter, Threads, KAKAOTALK (case-insensitive)
+        return /instagram|fb_iab|fbav|fban|line|twitter|threads|kakaotalk/i.test(ua);
+      };
+
+      window.getWebViewWarningMessage = function() {
+        const ua = navigator.userAgent;
+        const uaLower = ua.toLowerCase();
+        if (uaLower.includes('line')) {
+          return '画面下の […] → ブラウザで開く　をタップしてください';
+        }
+        const hasThreads = ua.includes('Threads') || uaLower.includes('threads');
+        const hasInstagram = ua.includes('Instagram') || uaLower.includes('instagram');
+        if (hasThreads) {
+          return '右上の [⊙] → 外部ブラウザーで開く　をタップしてください';
+        }
+        if (hasInstagram) {
+          return '右上の […] → 外部ブラウザーで開く　をタップしてください';
+        }
+        if (uaLower.includes('twitter')) {
+          return '右上の […] → ブラウザで開く　をタップしてください';
+        }
+        if (window.isWebViewEnv()) {
+          return 'ブラウザアプリで開いてからログインしてください';
+        }
+        return null;
+      };
+
+      window.copyCurrentURL = async () => {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          alert('URLをクリップボードにコピーしました！Safari等のブラウザを開いて、アドレスバーに貼り付けてください🐾');
+        } catch (err) {
+          const tempInput = document.createElement('input');
+          tempInput.value = window.location.href;
+          document.body.appendChild(tempInput);
+          tempInput.select();
+          document.execCommand('copy');
+          document.body.removeChild(tempInput);
+          alert('URLをクリップボードにコピーしました！Safari等のブラウザを開いて、アドレスバーに貼り付けてください🐾');
+        }
+      };
+
+      window.handleCopyAndOpen = async () => {
+        const copyBtn = document.getElementById('copy-btn');
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+        } catch (err) {
+          const tempInput = document.createElement('input');
+          tempInput.value = window.location.href;
+          document.body.appendChild(tempInput);
+          tempInput.select();
+          document.execCommand('copy');
+          document.body.removeChild(tempInput);
+        }
+        if (copyBtn) {
+          copyBtn.textContent = 'コピーしました！Safariで貼り付けてください✅';
+          copyBtn.style.background = '#2ec4b6';
+        }
+      };
+
+      window.openInExternalBrowser = () => {
+        const ua = navigator.userAgent.toLowerCase();
+        const isIOS = /ipad|iphone|ipod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        
+        window.copyCurrentURL().then(() => {
+          if (isIOS) {
+            window.location.href = "safari-" + window.location.href;
+          } else {
+            window.open(window.location.href, '_system');
+            window.location.href = window.location.href;
+          }
+        });
+      };
+
+      window.closeWebViewModal = () => {
+        const overlay = document.getElementById('instagram-block-overlay');
+        if (overlay) {
+          overlay.style.display = 'none';
+        }
+      };
+
+      window.showWebViewModal = () => {
+        const overlay = document.getElementById('instagram-block-overlay');
+        if (overlay) {
+          overlay.style.display = 'flex';
+        }
+      };
+
+      function checkWebViewLoad() {
+        const overlay = document.getElementById('instagram-block-overlay');
+        const banner = document.getElementById('login-banner');
+        const wvBanner = document.getElementById('webview-warning-banner');
+        const snsBanner = document.getElementById('sns-webview-banner');
+        if (window.isWebViewEnv()) {
+          const isInstagram = /instagram/i.test(navigator.userAgent);
+          if (wvBanner) {
+            wvBanner.style.display = 'none';
+          }
+          if (overlay) {
+            // Instagramの場合は既存のURLコピーモーダルではなく、先頭で強制表示しているモーダルのみを表示するため非表示とする
+            overlay.style.display = isInstagram ? 'none' : 'flex';
+          }
+          if (banner) {
+            banner.classList.add('disabled');
+          }
+          if (snsBanner) {
+            const msg = window.getWebViewWarningMessage();
+            if (msg && !isInstagram) { // Instagramの場合は上部バナーも非表示とする
+              snsBanner.textContent = '⚠️ ' + msg;
+              snsBanner.style.display = 'block';
+            } else {
+              snsBanner.style.display = 'none';
+            }
+          }
+        } else {
+          if (snsBanner) {
+            snsBanner.style.display = 'none';
+          }
+          if (wvBanner) {
+            wvBanner.style.display = 'none';
+          }
+          if (overlay) {
+            overlay.style.display = 'none';
+          }
+          if (banner) {
+            banner.classList.remove('disabled');
+          }
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', checkWebViewLoad);
+      } else {
+        checkWebViewLoad();
+      }
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
       }
     })();
   </script>

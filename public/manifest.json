@@ -1,0 +1,22 @@
+{
+  "name": "わんにゃん翻訳機",
+  "short_name": "わんにゃん翻訳",
+  "description": "AIがあなたの愛犬・愛猫の気持ちを代弁します。写真・行動・チャットでペットの心を読み取る無料診断アプリ。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff8f0",
+  "theme_color": "#f4a261",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

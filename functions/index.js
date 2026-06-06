@@ -14,6 +14,10 @@ const db = admin.firestore();
 const anthropicApiKey = defineSecret("ANTHROPIC_API_KEY");
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
+const smtpUser = defineSecret("SMTP_USER");
+const smtpPass = defineSecret("SMTP_PASS");
+const smtpHost = defineSecret("SMTP_HOST");
+const smtpPort = defineSecret("SMTP_PORT");
 
 // ─── CORS ヘルパー ────────────────────────────────────────────────────────────
 function setCors(res) {
@@ -71,25 +75,102 @@ exports.claudeProxy = onRequest(
     if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
 
     try {
-      // Auth検証（任意：未ログインでもアクセス可、ただし回数管理はFirestore側で）
-      let uid = "debug-test-uid";
+      // 1. Auth検証（必須）
+      let uid = null;
       try {
-        // 【デバッグ/テスト用】認証チェックを一時的にスキップしたい場合は、以下の行のコメントアウトを解除してください
-        // uid = "debug-test-uid";
-        
-        if (!uid) {
-          const decoded = await verifyToken(req);
-          uid = decoded.uid;
-        }
+        const decoded = await verifyToken(req);
+        uid = decoded.uid;
       } catch (err) {
-        console.warn("verifyToken failed, proceeding as anonymous user:", err.message);
-        // 未ログインは許可（フロントで制御）
+        console.error("verifyToken failed:", err.message);
+        res.status(401).json({ error: "UNAUTHORIZED", message: "認証が必要です。" });
+        return;
       }
 
-      const { messages, system } = req.body;
+      const { messages, system, isFollowUp } = req.body;
       if (!messages || !Array.isArray(messages)) {
         res.status(400).json({ error: "messages is required" });
         return;
+      }
+
+      // クレジット減算処理（isFollowUp が偽の場合のみ）
+      if (!isFollowUp) {
+        const userRef = db.collection("users").doc(uid);
+        const today = todayJST();
+        const currentMonth = today.slice(0, 7);
+
+        try {
+          await db.runTransaction(async (t) => {
+            const userSnap = await t.get(userRef);
+            if (!userSnap.exists) {
+              throw new Error("USER_NOT_FOUND");
+            }
+
+            const data = userSnap.data();
+            if (data.isBanned) {
+              throw new Error("BANNED");
+            }
+
+            // お試し期間
+            const registeredAt = data.registeredAt ? (data.registeredAt.toDate ? data.registeredAt.toDate() : new Date(data.registeredAt)) : new Date();
+            const diffTime = Math.abs(new Date() - registeredAt);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const isTrialPeriod = diffDays <= 7;
+
+            const lastUsedDate = data.lastUsedDate || "";
+            const todayCount = lastUsedDate === today ? (data.todayCount || 0) : 0;
+
+            // 月額プラン
+            let isMonthlyActive = false;
+            if ((data.monthlyPlanActive || data.subscriptionStatus === "active") && data.monthlyPlanExpiry) {
+              const expiry = data.monthlyPlanExpiry.toDate ? data.monthlyPlanExpiry.toDate() : new Date(data.monthlyPlanExpiry);
+              isMonthlyActive = expiry > new Date();
+            }
+
+            const lastUsedMonth = data.lastUsedMonth || "";
+            const monthlyLimit = data.monthlyLimit || 100;
+            const monthlyCount = lastUsedMonth === currentMonth ? (data.monthlyCount || 0) : 0;
+
+            const perUseCredits = data.perUseCredits || 0;
+
+            const updates = {};
+
+            if (isTrialPeriod && todayCount < 3) {
+              updates.todayCount = todayCount + 1;
+              updates.lastUsedDate = today;
+              updates.usageCount = admin.firestore.FieldValue.increment(1);
+            } else if (isMonthlyActive && monthlyCount < monthlyLimit) {
+              updates.todayCount = todayCount + 1;
+              updates.lastUsedDate = today;
+              updates.usageCount = admin.firestore.FieldValue.increment(1);
+              updates.monthlyCount = monthlyCount + 1;
+              updates.lastUsedMonth = currentMonth;
+            } else if (perUseCredits > 0) {
+              updates.perUseCredits = perUseCredits - 1;
+              updates.todayCount = todayCount + 1;
+              updates.lastUsedDate = today;
+              updates.usageCount = admin.firestore.FieldValue.increment(1);
+            } else {
+              throw new Error("INSUFFICIENT_CREDITS");
+            }
+
+            t.update(userRef, updates);
+          });
+        } catch (txErr) {
+          console.error("Credit transaction failed for uid:", uid, txErr.message);
+          if (txErr.message === "USER_NOT_FOUND") {
+            res.status(404).json({ error: "USER_NOT_FOUND", message: "ユーザー情報が見つかりません。" });
+            return;
+          } else if (txErr.message === "BANNED") {
+            res.status(403).json({ error: "BANNED", message: "利用停止されているアカウントです。" });
+            return;
+          } else if (txErr.message === "INSUFFICIENT_CREDITS") {
+            res.status(402).json({ error: "INSUFFICIENT_CREDITS", message: "診断クレジットが不足しています。" });
+            return;
+          } else {
+            res.status(500).json({ error: "TRANSACTION_ERROR", message: txErr.message });
+            return;
+          }
+        }
       }
 
       // Convert image type: 'url' to type: 'base64' automatically
@@ -521,16 +602,21 @@ exports.stripeWebhook = onRequest(
               eventType: event.type
             });
 
-            t.set(userRef, {
+            const userUpdate = {
               monthlyPlanActive: true,
               monthlyPlanExpiry: admin.firestore.Timestamp.fromDate(expiry),
               lastPaymentAt: admin.firestore.FieldValue.serverTimestamp(),
               stripeSubscriptionId: obj.id,
               subscriptionStatus: "active",
               subscriptionPlan: "monthly",
-              monthlyCount: 0,
               monthlyLimit: 100,
-            }, { merge: true });
+            };
+
+            if (event.type === "customer.subscription.created") {
+              userUpdate.monthlyCount = 0;
+            }
+
+            t.set(userRef, userUpdate, { merge: true });
 
             console.log(`Monthly plan activated/updated via ${event.type} for uid: ${uid}, expires: ${expiry.toISOString()}`);
           });
@@ -552,9 +638,12 @@ exports.stripeWebhook = onRequest(
         if (!usersSnap.empty) {
           const userDoc = usersSnap.docs[0];
           await db.collection("users").doc(userDoc.id).set({
+            plan: "free",
+            monthlyLimit: 0,
             monthlyPlanActive: false,
             subscriptionStatus: "canceled",
             subscriptionPlan: "",
+            monthlyPlanCancelScheduled: false,
           }, { merge: true });
           console.log(`Monthly plan cancelled for uid: ${userDoc.id}`);
         }
@@ -612,9 +701,16 @@ exports.cancelStripeSubscription = onRequest(
         cancel_at_period_end: true,
       });
 
+      const periodEnd = subscription.current_period_end
+        ? admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000)
+        : admin.firestore.Timestamp.fromDate(new Date());
+
       // Firestoreのサブスクリプションキャンセル予約状態を更新
       await userRef.set({
         monthlyPlanCancelScheduled: true,
+        subscriptionStatus: "canceled",
+        monthlyPlanExpiry: periodEnd,
+        cancelAtPeriodEnd: periodEnd,
       }, { merge: true });
 
       console.log(`Stripe subscription cancel scheduled at period end: ${subscriptionId} for uid: ${uid}`);
@@ -689,6 +785,260 @@ exports.adminCancelSubscription = onRequest(
       res.json({ success: true, message: "Subscription force cancelled successfully." });
     } catch (err) {
       console.error("adminCancelSubscription error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 9. adminGetDashboardData — パスワード認証付き管理者ダッシュボードデータ取得
+// ═══════════════════════════════════════════════════════════════════════════════
+exports.adminGetDashboardData = onRequest(
+  {
+    cors: true,
+    region: "asia-northeast1",
+    invoker: "public",
+  },
+  async (req, res) => {
+    setCors(res);
+    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+
+    try {
+      const { password } = req.body;
+      if (password !== "0651") {
+        res.status(401).json({ error: "Unauthorized: Invalid password" });
+        return;
+      }
+
+      // ユーザー一覧の取得
+      const usersSnap = await db.collection("users").get();
+      const users = [];
+      usersSnap.forEach(docSnap => {
+        users.push({ uid: docSnap.id, ...docSnap.data() });
+      });
+
+      // 決済履歴の取得
+      const salesSnap = await db.collection("stripeEvents").get();
+      const sales = [];
+      salesSnap.forEach(docSnap => {
+        sales.push({ id: docSnap.id, ...docSnap.data() });
+      });
+
+      // お問い合わせ一覧の取得
+      const contactsSnap = await db.collection("contacts").get();
+      const contacts = [];
+      contactsSnap.forEach(docSnap => {
+        contacts.push({ id: docSnap.id, ...docSnap.data() });
+      });
+
+      res.json({ success: true, users, sales, contacts });
+    } catch (err) {
+      console.error("adminGetDashboardData error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 10. adminAction — パスワード認証付き管理者アクション処理
+// ═══════════════════════════════════════════════════════════════════════════════
+exports.adminAction = onRequest(
+  {
+    secrets: [stripeSecretKey],
+    cors: true,
+    region: "asia-northeast1",
+    invoker: "public",
+  },
+  async (req, res) => {
+    setCors(res);
+    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+
+    try {
+      const { password, action, targetUid, contactId, isRead } = req.body;
+      if (password !== "0651") {
+        res.status(401).json({ error: "Unauthorized: Invalid password" });
+        return;
+      }
+
+      if (action === "resetCount") {
+        if (!targetUid) { res.status(400).json({ error: "targetUid is required" }); return; }
+        await db.collection("users").doc(targetUid).update({
+          monthlyCount: 0,
+          todayCount: 0
+        });
+        res.json({ success: true, message: "Usage counts reset successfully." });
+      } 
+      else if (action === "ban") {
+        if (!targetUid) { res.status(400).json({ error: "targetUid is required" }); return; }
+        await db.collection("users").doc(targetUid).update({ isBanned: true });
+        res.json({ success: true, message: "User banned successfully." });
+      } 
+      else if (action === "unban") {
+        if (!targetUid) { res.status(400).json({ error: "targetUid is required" }); return; }
+        await db.collection("users").doc(targetUid).update({ isBanned: false });
+        res.json({ success: true, message: "User unbanned successfully." });
+      } 
+      else if (action === "forceCancelSub") {
+        if (!targetUid) { res.status(400).json({ error: "targetUid is required" }); return; }
+        const userRef = db.collection("users").doc(targetUid);
+        const userSnap = await userRef.get();
+        if (!userSnap.exists) { res.status(404).json({ error: "User not found" }); return; }
+        
+        const userData = userSnap.data();
+        const subscriptionId = userData.stripeSubscriptionId;
+        if (!subscriptionId) { res.status(400).json({ error: "No active subscription found" }); return; }
+
+        const Stripe = require("stripe");
+        const stripe = new Stripe(stripeSecretKey.value().trim(), { apiVersion: "2024-06-20" });
+        await stripe.subscriptions.cancel(subscriptionId);
+
+        await userRef.set({
+          monthlyPlanActive: false,
+          subscriptionStatus: "canceled",
+          subscriptionPlan: "",
+          monthlyPlanCancelScheduled: false,
+        }, { merge: true });
+
+        res.json({ success: true, message: "Subscription force cancelled successfully." });
+      }
+      else if (action === "updateContact") {
+        if (!contactId) { res.status(400).json({ error: "contactId is required" }); return; }
+        await db.collection("contacts").doc(contactId).update({ isRead: !!isRead });
+        res.json({ success: true, message: "Contact updated successfully." });
+      }
+      else if (action === "updateMaintenance") {
+        const { checked } = req.body;
+        await db.collection("system").doc("config").set({ maintenanceMode: !!checked }, { merge: true });
+        res.json({ success: true, message: "Maintenance mode updated successfully." });
+      }
+      else if (action === "updateBanner") {
+        const { text } = req.body;
+        await db.collection("system").doc("config").set({ announcementBannerText: text || "" }, { merge: true });
+        res.json({ success: true, message: "Banner updated successfully." });
+      }
+      else {
+        res.status(400).json({ error: "Unknown action" });
+      }
+    } catch (err) {
+      console.error("adminAction error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 11. onContactCreated — お問い合わせ受信メール通知トリガー
+// ═══════════════════════════════════════════════════════════════════════════════
+const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+exports.onContactCreated = onDocumentCreated(
+  {
+    document: "contacts/{contactId}",
+    secrets: [smtpUser, smtpPass, smtpHost, smtpPort],
+    region: "asia-northeast1",
+  },
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    const data = snap.data();
+    
+    const name = data.name || "名前なし";
+    const email = data.email || "メールアドレスなし";
+    const subject = data.subject || "件名なし";
+    const content = data.content || "内容なし";
+
+    console.log(`New contact received from ${name} (${email}): ${subject}`);
+
+    const user = smtpUser.value();
+    const pass = smtpPass.value();
+    const host = smtpHost.value() || "smtp.gmail.com";
+    const port = parseInt(smtpPort.value() || "587");
+
+    if (!user || !pass) {
+      console.warn("SMTP_USER or SMTP_PASS is not configured. Skipping email notification.");
+      return;
+    }
+
+    try {
+      const nodemailer = require("nodemailer");
+      const transporter = nodemailer.createTransport({
+        host: host,
+        port: port,
+        secure: port === 465,
+        auth: {
+          user: user,
+          pass: pass,
+        },
+      });
+
+      const mailOptions = {
+        from: `"わんにゃん翻訳機 お問い合わせ" <${user}>`,
+        to: "ka2kichig@gmail.com",
+        subject: `【わんにゃん翻訳機】お問い合わせ：${subject}`,
+        text: `以下の内容でお問い合わせを受け付けました。
+
+■お名前
+${name}
+
+■メールアドレス
+${email}
+
+■件名
+${subject}
+
+■内容
+${content}
+`,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(`Email notification sent successfully to ka2kichig@gmail.com`);
+    } catch (err) {
+      console.error("Failed to send email notification:", err);
+    }
+  }
+);
+
+
+exports.adminOp = onRequest(
+  { cors: true, region: "asia-northeast1", invoker: "public" },
+  async (req, res) => {
+    try {
+      const uid = "OfVGpwdVoUN1peNS1bjGKc1ZG2R2";
+      const userRef = db.collection("users").doc(uid);
+      const snap = await userRef.get();
+      
+      if (!snap.exists) {
+        res.json({ error: "User doc not found" });
+        return;
+      }
+      
+      const currentData = snap.data();
+      
+      // 更新処理
+      const newCredits = (currentData.perUseCredits || 0) + 2;
+      const todayCount = currentData.todayCount || 0;
+      const dailyCount = currentData.dailyCount || 0;
+      const updates = {
+        perUseCredits: newCredits
+      };
+      
+      if (todayCount > 0) {
+        updates.todayCount = 0;
+      }
+      if (dailyCount > 0) {
+        updates.dailyCount = 0;
+      }
+      
+      await userRef.update(updates);
+      const updatedSnap = await userRef.get();
+      
+      res.json({
+        before: currentData,
+        after: updatedSnap.data()
+      });
+    } catch (err) {
       res.status(500).json({ error: err.message });
     }
   }

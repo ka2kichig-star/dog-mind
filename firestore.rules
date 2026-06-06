@@ -22,9 +22,10 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // 虹の橋：ペットメモリアル
+    // 虹の橋：ペットメモリアル（シェアのため読み込みは全員許可、書き込みは本人のみ）
     match /memorials/{uid}/pets/{petId} {
-      allow read, write: if (request.auth != null && request.auth.uid == uid) || isAdmin();
+      allow read: if true;
+      allow write: if (request.auth != null && request.auth.uid == uid) || isAdmin();
     }
 
     // 虹の橋：チャット履歴
@@ -47,6 +48,17 @@ service cloud.firestore {
     match /system/{documentId} {
       allow read: if true; // メンテナンスチェックやバナー取得のため全ユーザー許可
       allow write: if isAdmin();
+    }
+
+    // お問い合わせ：誰でも作成可能、読み書きは管理者のみ
+    match /contacts/{contactId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // 閲覧数カウンター：誰でも読み書き可能
+    match /counters/{counterId} {
+      allow read, write: if true;
     }
   }
 }

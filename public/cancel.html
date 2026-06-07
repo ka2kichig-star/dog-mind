@@ -468,24 +468,8 @@
       });
     }
 
-    // ページロード時に残存リダイレクト結果を処理
-    getRedirectResult(auth).then((result) => {
-      if (result && result.user) {
-        if (window.showToast) {
-          window.showToast("ログインに成功しました🐾");
-        }
-      }
-    }).catch((e) => {
-      if (e.code !== 'auth/no-redirect-operation') {
-        console.error('[getRedirectResult] Error:', e.code, e.message);
-        const errMsg = 'Googleログインに失敗しました。詳細: ' + e.message;
-        if (window.showToast) {
-          window.showToast(errMsg, 'error');
-        } else {
-          alert(errMsg);
-        }
-      }
-    });
+    // ページロード時の処理は不要になったため getRedirectResult 削除
+
 
     const FUNCTIONS_BASE_URL = 'https://asia-northeast1-wanwan-translator.cloudfunctions.net';
 
@@ -543,7 +527,13 @@
       }
 
       try {
-        await signInWithRedirect(auth, provider);
+        await setPersistence(auth, browserLocalPersistence);
+        const result = await signInWithPopup(auth, provider);
+        if (result && result.user) {
+          if (window.showToast) {
+            window.showToast("ログインに成功しました🐾");
+          }
+        }
       } catch (e) {
         console.error('Login error:', e);
         alert('ログインに失敗しました: ' + e.message);

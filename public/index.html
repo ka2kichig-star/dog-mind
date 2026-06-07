@@ -876,12 +876,23 @@
     }
 
     /* ===== Login / Auth UI ===== */
+    .login-menu-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 0px;
+      z-index: 10;
+      position: relative;
+    }
+
     .login-banner {
       width: 100%;
       max-width: 480px;
       background: var(--primary);
       color: white;
-      padding: 12px 16px;
+      padding: 12px 110px 12px 16px;
       border-radius: 12px;
       margin-bottom: 12px;
       text-align: center;
@@ -2068,19 +2079,34 @@
   <!-- SNS WebView用警告バナー -->
   <div class="sns-webview-banner" id="sns-webview-banner" style="display:none;"></div>
 
-  <!-- ログインバナー -->
-  <div class="login-banner" id="login-banner" style="display:none">
-    <div onclick="loginWithGoogle()" style="cursor: pointer; padding: 4px 0;">
-      🐶 Googleログインで初回3回無料診断！タップしてログイン
+  <!-- ログイン前・設定エリアのコンテナ -->
+  <div class="login-menu-wrapper">
+    <!-- ログインバナー -->
+    <div class="login-banner" id="login-banner" style="display:none">
+      <div onclick="loginWithGoogle()" style="cursor: pointer; padding: 4px 0;">
+        🐶 Googleログインで初回3回無料診断！タップしてログイン
+      </div>
+      <div style="margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: normal;">
+        <input type="checkbox" id="terms-checkbox" style="cursor: pointer;" onclick="event.stopPropagation()">
+        <label for="terms-checkbox" style="cursor: pointer;" onclick="event.stopPropagation()">
+          <a href="/terms.html" target="_blank" style="color: white; text-decoration: underline; font-weight: bold;">利用規約</a>に同意してログインする
+        </label>
+      </div>
+      <div style="margin-top: 4px; font-size: 10px; font-weight: normal; opacity: 0.9;">
+        ※ 未成年者のご利用は保護者の同意が必要です
+      </div>
     </div>
-    <div style="margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: normal;">
-      <input type="checkbox" id="terms-checkbox" style="cursor: pointer;" onclick="event.stopPropagation()">
-      <label for="terms-checkbox" style="cursor: pointer;" onclick="event.stopPropagation()">
-        <a href="/terms.html" target="_blank" style="color: white; text-decoration: underline; font-weight: bold;">利用規約</a>に同意してログインする
-      </label>
+
+    <!-- 犬猫切替 -->
+    <div class="species-toggle" id="species-toggle">
+      <button class="species-btn active" id="species-btn-dog" onclick="setSpecies('dog')">🐶 わんわん</button>
+      <button class="species-btn" id="species-btn-cat" onclick="setSpecies('cat')">🐱 にゃんにゃん</button>
     </div>
-    <div style="margin-top: 4px; font-size: 10px; font-weight: normal; opacity: 0.9;">
-      ※ 未成年者のご利用は保護者の同意が必要です
+
+    <!-- モード切替 -->
+    <div class="mode-toggle" id="mode-toggle">
+      <button class="mode-btn active" id="mode-btn-normal" onclick="setMode('normal')">🐶 今いる子の診断</button>
+      <button class="mode-btn" id="mode-btn-rainbow" onclick="setMode('rainbow')">🌈 虹の橋</button>
     </div>
   </div>
 
@@ -2089,18 +2115,6 @@
     <span id="anniversary-banner-text">🎂 今日は特別な日です。通知を許可して教えてもらいましょう。</span>
     <button class="notif-close"
       onclick="event.stopPropagation(); document.getElementById('anniversary-banner').style.display='none'">×</button>
-  </div>
-
-  <!-- 犬猫切替 -->
-  <div class="species-toggle" id="species-toggle">
-    <button class="species-btn active" id="species-btn-dog" onclick="setSpecies('dog')">🐶 わんわん</button>
-    <button class="species-btn" id="species-btn-cat" onclick="setSpecies('cat')">🐱 にゃんにゃん</button>
-  </div>
-
-  <!-- モード切替 -->
-  <div class="mode-toggle" id="mode-toggle">
-    <button class="mode-btn active" id="mode-btn-normal" onclick="setMode('normal')">🐶 今いる子の診断</button>
-    <button class="mode-btn" id="mode-btn-rainbow" onclick="setMode('rainbow')">🌈 虹の橋</button>
   </div>
 
   <!-- ===== 通常モード ===== -->
@@ -2627,6 +2641,8 @@
     window._signInWithPopup = signInWithPopup;
     window._signInWithRedirect = signInWithRedirect;
     window._getRedirectResult = getRedirectResult;
+    window._setPersistence = setPersistence;
+    window._browserLocalPersistence = browserLocalPersistence;
     window._signOut = signOut;
     window.logoutWithFirebase = async function() {
       try {
@@ -2875,6 +2891,26 @@
       }
     };
 
+    async function saveUserToFirestore(user) {
+      const ref = doc(db, 'users', user.uid);
+      let snap = await getDoc(ref);
+      const today = window.todayJST ? window.todayJST() : new Date().toISOString().slice(0, 10);
+      if (!snap.exists()) {
+        await setDoc(ref, {
+          registeredAt: serverTimestamp(),
+          lastUsedDate: today,
+          todayCount: 0,
+          usageCount: 0
+        });
+      } else if (!snap.data().registeredAt) {
+        await updateDoc(ref, { registeredAt: serverTimestamp() });
+      }
+    }
+    window.saveUserToFirestore = saveUserToFirestore;
+
+    // ページロード時の処理は不要になったため getRedirectResult 削除
+
+
     onAuthStateChanged(auth, async (user) => {
       const banner = document.getElementById('login-banner');
       const badge = document.getElementById('usage-badge');
@@ -2887,24 +2923,11 @@
         if (snsBanner) snsBanner.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'flex';
         if (cancelBtn) cancelBtn.style.display = 'flex';
+        
+        await saveUserToFirestore(user);
+
         const ref = doc(db, 'users', user.uid);
-        let snap = await getDoc(ref);
-        const today = window.todayJST();
-
-        // 登録日時の確認と保存
-        if (!snap.exists()) {
-          await setDoc(ref, {
-            registeredAt: serverTimestamp(),
-            lastUsedDate: today,
-            todayCount: 0,
-            usageCount: 0
-          });
-          snap = await getDoc(ref);
-        } else if (!snap.data().registeredAt) {
-          await updateDoc(ref, { registeredAt: serverTimestamp() });
-          snap = await getDoc(ref);
-        }
-
+        const snap = await getDoc(ref);
         const data = snap.data();
         if (data && data.isBanned) {
           alert('🚨 利用規約違反または管理者により、このアカウントは利用停止されています。');
@@ -2947,39 +2970,6 @@
       }
       // ログイン状態が変わったらボタンの有効無効を更新
       updateSubmitButtons();
-    });
-
-    // ページロード時に残存リダイレクト結果を処理
-    getRedirectResult(auth).then(async (result) => {
-      if (result && result.user) {
-        const user = result.user;
-        const ref = doc(db, 'users', user.uid);
-        let snap = await getDoc(ref);
-        const today = window.todayJST ? window.todayJST() : new Date().toISOString().slice(0, 10);
-        if (!snap.exists()) {
-          await setDoc(ref, {
-            registeredAt: serverTimestamp(),
-            lastUsedDate: today,
-            todayCount: 0,
-            usageCount: 0
-          });
-        } else if (!snap.data().registeredAt) {
-          await updateDoc(ref, { registeredAt: serverTimestamp() });
-        }
-        if (window.showToast) {
-          window.showToast("Googleログインに成功しました🐾");
-        }
-      }
-    }).catch((e) => {
-      if (e.code !== 'auth/no-redirect-operation') {
-        console.error('[getRedirectResult] Error:', e.code, e.message);
-        const errMsg = 'Googleログインに失敗しました。詳細: ' + e.message;
-        if (window.showToast) {
-          window.showToast(errMsg, 'error');
-        } else {
-          alert(errMsg);
-        }
-      }
     });
   </script>
 
@@ -3136,10 +3126,19 @@
       }
 
       try {
-        await window._signInWithRedirect(window._auth, window._provider);
+        if (window._setPersistence && window._browserLocalPersistence) {
+          await window._setPersistence(window._auth, window._browserLocalPersistence);
+        }
+        const result = await window._signInWithPopup(window._auth, window._provider);
+        if (result && result.user) {
+          await saveUserToFirestore(result.user);
+          if (window.showToast) {
+            window.showToast("Googleログインに成功しました🐾");
+          }
+        }
       } catch (e) {
         console.error('[loginWithGoogle] Login failed with error:', e.code, e.message);
-        alert('ログインに失敗しました。もう一度お試しください。\nエラー詳細: ' + e.message);
+        alert('ログインに失敗しました。もう一度お試しください。詳細: ' + e.message);
       }
     }
 

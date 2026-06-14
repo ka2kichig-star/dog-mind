@@ -34,28 +34,22 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
   
   <style>
-    /* ===== Core Design System ===== */
+    /* ===== Design System Variables ===== */
     :root {
-      --primary: #f4a261;
-      --primary-dark: #e07020;
-      --primary-light: #fff8f0;
-      
-      --secondary: #ff85a1;
-      --secondary-dark: #f06292;
-      --secondary-light: #fff0f3;
-      
-      --accent-purple: #7c5cbf;
-      --accent-purple-light: #faf4ff;
-      
-      --text-main: #4a3f35;
-      --text-sub: #7a6e65;
-      --bg-base: #fefcf9;
-      --white: #ffffff;
-      --shadow-soft: 0 10px 30px rgba(74, 63, 53, 0.05);
-      --shadow-premium: 0 15px 45px rgba(244, 162, 97, 0.15);
+      --bg-dark: #0a0a0a;
+      --bg-card: #141414;
+      --bg-card-hover: #1c1c1c;
+      --accent: #f4a261;
+      --accent-hover: #e76f51;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --gradient-accent: linear-gradient(135deg, #f4a261 0%, #e76f51 100%);
+      --glow-shadow: 0 0 25px rgba(244, 162, 97, 0.25);
     }
 
     * {
@@ -69,24 +63,91 @@
     }
 
     body {
-      font-family: 'Zen Maru Gothic', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
-      background-color: var(--bg-base);
-      color: var(--text-main);
-      line-height: 1.8;
+      font-family: 'Noto Sans JP', 'Zen Maru Gothic', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      line-height: 1.7;
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Outer Wrapper to Constrain Content Area for Premium Feel */
-    .app-wrapper {
-      max-width: 480px;
+    /* ===== Utilities & Grid Layout ===== */
+    .container {
+      max-width: 1200px;
       margin: 0 auto;
-      background-color: var(--white);
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.04);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      padding: 0 24px;
+    }
+
+    .section {
+      padding: 100px 0;
       position: relative;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .section-tag {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 32px;
+      font-weight: 900;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+
+    .section-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ===== Buttons & CTAs ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      padding: 16px 36px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 30px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--gradient-accent);
+      color: #000000;
+      box-shadow: var(--glow-shadow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 35px rgba(244, 162, 97, 0.45);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
     }
 
     /* ===== Scroll Reveal Animations ===== */
@@ -101,458 +162,508 @@
       transform: translateY(0);
     }
 
-    /* ===== Common Components ===== */
-    .section {
-      padding: 60px 24px;
-      border-bottom: 8px solid #fcfaf7;
-    }
-
-    .section-title-wrap {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-
-    .section-tag {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 900;
-      color: var(--primary-dark);
-      background: var(--primary-light);
-      padding: 4px 12px;
-      border-radius: 100px;
-      margin-bottom: 8px;
-      letter-spacing: 0.5px;
-    }
-
-    .section-title {
-      font-size: 24px;
-      font-weight: 900;
-      color: var(--text-main);
-      line-height: 1.4;
-    }
-
-    .btn-cta {
-      display: block;
+    /* ===== Navigation ===== */
+    nav {
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
-      text-align: center;
-      text-decoration: none;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: var(--white);
-      font-weight: 900;
-      font-size: 17px;
-      padding: 16px 24px;
-      border-radius: 30px;
-      box-shadow: var(--shadow-premium);
-      transition: all 0.3s ease;
-      border: none;
-      cursor: pointer;
+      z-index: 100;
     }
 
-    .btn-cta:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 36px rgba(240, 98, 146, 0.3);
+    .logo {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     /* ===== 1. Hero Section ===== */
-    .hero {
-      background: linear-gradient(180deg, var(--primary-light) 0%, var(--white) 100%);
-      padding: 60px 24px 40px;
-      text-align: center;
-      border-bottom: none;
+    .hero-section {
+      padding: 160px 0 100px;
+      background: radial-gradient(circle at 50% 10%, rgba(244, 162, 97, 0.1) 0%, rgba(10, 10, 10, 0) 60%);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    @media (max-width: 960px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
     }
 
     .hero-badge {
       display: inline-flex;
       align-items: center;
-      background: var(--white);
-      color: var(--secondary-dark);
-      font-size: 12px;
-      font-weight: 900;
+      gap: 8px;
+      background: rgba(244, 162, 97, 0.12);
+      border: 1px solid rgba(244, 162, 97, 0.3);
+      color: var(--accent);
       padding: 6px 16px;
       border-radius: 100px;
+      font-size: 13px;
+      font-weight: 700;
       margin-bottom: 24px;
-      border: 1.5px solid var(--secondary);
-      box-shadow: 0 4px 12px rgba(255, 133, 161, 0.1);
-      animation: bounce 2s infinite ease-in-out;
-    }
-
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-4px); }
     }
 
     .hero-title {
-      font-size: 28px;
+      font-size: 48px;
       font-weight: 900;
-      line-height: 1.4;
-      color: var(--text-main);
-      margin-bottom: 16px;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      line-height: 1.25;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 576px) {
+      .hero-title {
+        font-size: 36px;
+      }
     }
 
     .hero-title span {
-      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 100%);
+      background: var(--gradient-accent);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
 
-    .hero-subtitle {
-      font-size: 14px;
-      color: var(--text-sub);
-      margin-bottom: 28px;
-      font-weight: 500;
+    .hero-desc {
+      font-size: 18px;
+      color: var(--text-secondary);
+      margin-bottom: 36px;
     }
 
-    .hero-illustration {
+    .hero-ctas {
+      display: flex;
+      gap: 16px;
+    }
+
+    @media (max-width: 960px) {
+      .hero-ctas {
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-ctas {
+        flex-direction: column;
+      }
+    }
+
+    /* CSS Smartphone Mockup */
+    .mockup-wrapper {
       display: flex;
       justify-content: center;
-      gap: 16px;
-      font-size: 64px;
-      margin-bottom: 24px;
+      align-items: center;
     }
 
-    /* ===== 2. Diagnosis Demo Section ===== */
-    .demo {
-      background-color: var(--white);
-    }
-
-    .demo-container {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    .phone-mock {
-      background: #1e1e24;
-      border: 6px solid #2d2d35;
-      border-radius: 36px;
-      padding: 16px;
-      box-shadow: var(--shadow-soft);
+    .phone-mockup {
+      width: 290px;
+      height: 580px;
+      background: #141414;
+      border: 10px solid #2d2d2d;
+      border-radius: 40px;
       position: relative;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), var(--glow-shadow);
+      padding: 10px;
     }
 
-    .phone-mock::before {
+    .phone-mockup::before {
       content: '';
       position: absolute;
-      top: 6px;
+      top: 0;
       left: 50%;
       transform: translateX(-50%);
-      width: 60px;
-      height: 12px;
-      background: #2d2d35;
-      border-radius: 6px;
+      width: 110px;
+      height: 20px;
+      background: #2d2d2d;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      z-index: 10;
     }
 
     .phone-screen {
-      background: var(--bg-base);
-      border-radius: 24px;
-      padding: 16px;
-      min-height: 240px;
+      width: 100%;
+      height: 100%;
+      background: #fff8f0;
+      border-radius: 30px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Zen Maru Gothic', sans-serif;
     }
 
-    .demo-type-title {
-      font-size: 14px;
-      font-weight: 900;
-      color: var(--accent-purple);
-      margin-bottom: 10px;
+    /* Mini Mock App Content */
+    .mock-header {
+      background: #f4a261;
+      padding: 24px 12px 12px;
+      color: white;
       text-align: center;
+      font-weight: 900;
+      font-size: 13px;
     }
 
-    .demo-photo-box {
-      background: var(--white);
+    .mock-content {
+      flex: 1;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .mock-card {
+      background: white;
       border-radius: 16px;
       padding: 12px;
-      border: 1.5px solid #ffeedd;
-      text-align: center;
+      box-shadow: 0 4px 12px rgba(244, 162, 97, 0.1);
+      border: 1px solid #ffeedd;
     }
 
-    .demo-img-placeholder {
+    .mock-photo {
       width: 100%;
-      height: 140px;
+      height: 120px;
       background: #eef2f5;
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 40px;
-      margin-bottom: 12px;
+      font-size: 48px;
     }
 
-    .demo-balloon {
-      background: var(--accent-purple-light);
-      border: 1.5px solid var(--accent-purple);
-      border-radius: 16px;
-      padding: 10px 14px;
-      font-size: 13px;
+    .mock-btn {
+      background: #f4a261;
+      color: white;
+      padding: 10px;
+      border-radius: 20px;
+      font-size: 11px;
       font-weight: 700;
-      color: var(--accent-purple);
-      position: relative;
-      margin-top: 10px;
-      animation: pulse 2s infinite alternate;
+      text-align: center;
+      margin-top: 8px;
     }
 
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      100% { transform: scale(1.02); }
+    .mock-result {
+      background: #fff8f0;
+      border: 1.5px solid #f4a261;
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 11px;
+      color: #333;
+      margin-top: 8px;
     }
 
-    /* ===== 3. Diagnosis Result Sample Section ===== */
-    .result-sample {
-      background-color: #fffaf5;
+    /* ===== 2. Methods Section ===== */
+    .methods-section {
+      background: #0d0d0d;
     }
 
-    .result-card {
-      background: var(--white);
+    .methods-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 960px) {
+      .methods-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .method-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
       border-radius: 24px;
-      border: 2px solid #ffeedd;
-      padding: 24px;
-      box-shadow: var(--shadow-soft);
+      padding: 32px;
+      transition: all 0.3s;
+      position: relative;
     }
 
-    .result-header {
+    .method-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(244, 162, 97, 0.3);
+      transform: translateY(-4px);
+    }
+
+    .method-icon {
+      font-size: 36px;
+      background: rgba(255, 255, 255, 0.03);
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-      border-bottom: 1.5px dashed #ffeedd;
-      padding-bottom: 12px;
+      justify-content: center;
+      margin-bottom: 24px;
+      border: 1px solid var(--border-color);
     }
 
-    .result-avatar {
+    .method-card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .method-card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .badge-new {
+      background: #ff5e5e;
+      color: white;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 8px;
+      text-transform: uppercase;
+    }
+
+    /* ===== 3. Sample Section ===== */
+    .sample-section {
+      background: var(--bg-dark);
+    }
+
+    .sample-wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 28px;
+      padding: 32px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+    }
+
+    .sample-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 20px;
+    }
+
+    .sample-avatar {
       font-size: 32px;
-      background: var(--primary-light);
-      width: 54px;
-      height: 54px;
+      background: rgba(255,255,255,0.03);
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      border: 1px solid var(--border-color);
     }
 
-    .result-meta h4 {
-      font-size: 16px;
-      font-weight: 900;
-    }
-
-    .result-meta p {
-      font-size: 11px;
-      color: var(--text-sub);
-    }
-
-    .emotion-section {
-      margin-bottom: 20px;
-    }
-
-    .emotion-title {
-      font-size: 12px;
-      font-weight: 900;
-      color: var(--text-sub);
-      margin-bottom: 8px;
-    }
-
-    .emotion-bar-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .emotion-bar-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-    }
-
-    .emotion-label {
-      width: 70px;
+    .sample-meta h4 {
+      font-size: 18px;
       font-weight: 700;
     }
 
-    .emotion-bar-bg {
-      flex: 1;
-      height: 10px;
-      background: #eef2f5;
-      border-radius: 10px;
-      margin: 0 12px;
-      overflow: hidden;
-    }
-
-    .emotion-bar-fill {
-      height: 100%;
-      border-radius: 10px;
-    }
-
-    .emotion-val {
-      width: 32px;
-      text-align: right;
-      font-weight: 900;
-    }
-
-    .voice-bubble {
-      background: var(--accent-purple-light);
-      border: 1.5px solid var(--accent-purple);
-      border-radius: 20px;
-      padding: 16px;
-      font-size: 14px;
-      font-weight: 900;
-      color: var(--accent-purple);
-      position: relative;
-      margin-bottom: 20px;
-    }
-
-    .voice-bubble::after {
-      content: '';
-      position: absolute;
-      bottom: -8px;
-      left: 24px;
-      width: 14px;
-      height: 14px;
-      background: var(--accent-purple-light);
-      border-bottom: 1.5px solid var(--accent-purple);
-      border-right: 1.5px solid var(--accent-purple);
-      transform: rotate(45deg);
-    }
-
-    .advice-box {
-      background: var(--primary-light);
-      border-radius: 16px;
-      padding: 16px;
+    .sample-meta p {
       font-size: 12px;
-      line-height: 1.6;
+      color: var(--text-secondary);
     }
 
-    .advice-box strong {
-      color: var(--primary-dark);
-      display: block;
-      margin-bottom: 4px;
+    .sample-emotion {
+      margin-bottom: 24px;
     }
 
-    /* ===== 4. Features Section ===== */
-    .features {
-      background-color: var(--white);
-    }
-
-    .features-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .feature-card {
-      background: var(--bg-base);
-      border-radius: 20px;
-      padding: 20px;
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
-      transition: transform 0.2s;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-2px);
-    }
-
-    .feature-icon {
-      font-size: 36px;
-      line-height: 1;
-      background: var(--white);
-      width: 56px;
-      height: 56px;
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: var(--shadow-soft);
-      flex-shrink: 0;
-    }
-
-    .feature-info h3 {
-      font-size: 16px;
-      font-weight: 900;
-      margin-bottom: 6px;
-    }
-
-    .feature-info p {
+    .sample-emotion-title {
       font-size: 13px;
-      color: var(--text-sub);
-      line-height: 1.6;
-    }
-
-    /* ===== 5. Pricing Section ===== */
-    .pricing {
-      background-color: #fffdfb;
-    }
-
-    .pricing-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .price-card {
-      background: var(--white);
-      border: 2px solid #eef2f5;
-      border-radius: 24px;
-      padding: 24px;
-      position: relative;
-      overflow: hidden;
-      transition: all 0.3s ease;
-    }
-
-    .price-card.featured {
-      border-color: var(--secondary);
-      background: linear-gradient(180deg, var(--white) 0%, var(--secondary-light) 100%);
-      box-shadow: 0 8px 24px rgba(255, 133, 161, 0.15);
-    }
-
-    .price-badge {
-      position: absolute;
-      top: 0;
-      right: 0;
-      background: var(--secondary-dark);
-      color: var(--white);
-      font-size: 10px;
-      font-weight: 900;
-      padding: 4px 12px;
-      border-radius: 0 22px 0 12px;
-    }
-
-    .price-name {
-      font-size: 15px;
-      font-weight: 900;
-      color: var(--text-sub);
-      margin-bottom: 6px;
-    }
-
-    .price-card.featured .price-name {
-      color: var(--secondary-dark);
-    }
-
-    .price-amount {
-      font-size: 28px;
-      font-weight: 900;
-      color: var(--text-main);
+      font-weight: 700;
+      color: var(--accent);
       margin-bottom: 12px;
     }
 
-    .price-amount span {
+    .sample-bar-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sample-bar-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       font-size: 13px;
+    }
+
+    .sample-bar-label {
+      width: 60px;
+      font-weight: 700;
+    }
+
+    .sample-bar-track {
+      flex: 1;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      margin: 0 16px;
+      overflow: hidden;
+    }
+
+    .sample-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+    }
+
+    .sample-bar-val {
+      width: 36px;
+      text-align: right;
+      font-weight: 700;
+    }
+
+    .sample-bubble {
+      background: rgba(244, 162, 97, 0.08);
+      border: 1px solid var(--accent);
+      border-radius: 20px;
+      padding: 20px;
+      font-size: 15px;
+      color: var(--text-primary);
+      position: relative;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .sample-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 30px;
+      width: 14px;
+      height: 14px;
+      background: #12100e;
+      border-bottom: 1px solid var(--accent);
+      border-right: 1px solid var(--accent);
+      transform: rotate(45deg);
+    }
+
+    .sample-advice {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 13px;
+    }
+
+    .sample-advice strong {
+      color: var(--accent);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    /* ===== 4. Pricing Section ===== */
+    .pricing-section {
+      background: #0d0d0d;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 960px) {
+      .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .price-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 40px 32px;
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .price-card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .price-card.featured {
+      border-color: var(--accent);
+      background: radial-gradient(circle at 50% 0%, rgba(244, 162, 97, 0.08) 0%, rgba(20, 20, 20, 0) 70%), var(--bg-card);
+      box-shadow: var(--glow-shadow);
+    }
+
+    .price-card.featured::after {
+      content: 'おすすめ';
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--accent);
+      color: #000;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 4px 10px;
+      border-radius: 100px;
+      letter-spacing: 0.5px;
+    }
+
+    .price-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .price-card.featured .price-name {
+      color: var(--accent);
+    }
+
+    .price-val {
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .price-val span {
+      font-size: 14px;
       font-weight: 500;
-      color: var(--text-sub);
+      color: var(--text-secondary);
+    }
+
+    .price-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+      height: 36px;
     }
 
     .price-features {
       list-style: none;
+      border-top: 1px solid var(--border-color);
+      padding-top: 24px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      border-top: 1px dashed #eef2f5;
-      padding-top: 12px;
+      gap: 12px;
     }
 
     .price-features li {
-      font-size: 12px;
-      color: var(--text-sub);
+      font-size: 13px;
+      color: var(--text-secondary);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -560,15 +671,169 @@
 
     .price-features li::before {
       content: '✓';
-      color: var(--primary-dark);
+      color: var(--accent);
       font-weight: 900;
     }
 
-    .price-card.featured .price-features li::before {
-      color: var(--secondary-dark);
+    .donation-notice {
+      text-align: center;
+      font-size: 14px;
+      color: var(--accent);
+      background: rgba(244, 162, 97, 0.08);
+      border: 1px dashed rgba(244, 162, 97, 0.3);
+      padding: 16px;
+      border-radius: 16px;
+      margin-top: 40px;
+      font-weight: 700;
     }
 
-    /* ===== Sticky Bottom CTA for Mobile ===== */
+    /* ===== 5. Social Contribution Section ===== */
+    .donation-section {
+      background: var(--bg-dark);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .donation-box {
+      background: linear-gradient(135deg, rgba(244, 162, 97, 0.05) 0%, rgba(20, 20, 20, 0) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 28px;
+      padding: 48px;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    @media (max-width: 840px) {
+      .donation-box {
+        grid-template-columns: 1fr;
+        padding: 32px;
+        text-align: center;
+      }
+    }
+
+    .donation-info h3 {
+      font-size: 26px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+
+    .donation-info p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    .donation-visual {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 32px;
+      text-align: center;
+    }
+
+    .donation-visual-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      animation: bounce 2s infinite ease-in-out;
+    }
+
+    .donation-visual-stat {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .donation-visual-text {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* ===== 6. FAQ Section ===== */
+    .faq-section {
+      background: #0d0d0d;
+    }
+
+    .faq-list {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .faq-item[open] {
+      border-color: rgba(244, 162, 97, 0.3);
+    }
+
+    .faq-question {
+      padding: 20px 24px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      outline: none;
+      list-style: none;
+    }
+
+    .faq-question::-webkit-details-marker {
+      display: none;
+    }
+
+    .faq-question::after {
+      content: '+';
+      font-size: 20px;
+      color: var(--accent);
+      transition: transform 0.3s;
+    }
+
+    .faq-item[open] .faq-question::after {
+      content: '-';
+    }
+
+    .faq-answer {
+      padding: 0 24px 20px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      border-top: 1px solid rgba(255, 255, 255, 0.03);
+      padding-top: 16px;
+    }
+
+    /* ===== 7. Final CTA Section ===== */
+    .final-cta-section {
+      padding: 120px 0;
+      text-align: center;
+      background: radial-gradient(circle at 50% 50%, rgba(244, 162, 97, 0.08) 0%, rgba(10, 10, 10, 0) 70%), var(--bg-dark);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .final-cta-section h2 {
+      font-size: 36px;
+      font-weight: 900;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      margin-bottom: 16px;
+    }
+
+    .final-cta-section p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 36px;
+    }
+
+    /* Sticky Bottom Bar for Mobile */
     .sticky-cta {
       position: fixed;
       bottom: 0;
@@ -576,278 +841,645 @@
       transform: translateX(-50%);
       width: 100%;
       max-width: 480px;
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(10, 10, 10, 0.95);
       backdrop-filter: blur(10px);
-      box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.3);
       padding: 12px 20px;
       z-index: 1000;
       display: none;
-      border-top: 1px solid #fcfaf7;
+      border-top: 1px solid var(--border-color);
     }
 
     @media (max-width: 480px) {
       .sticky-cta {
         display: block;
       }
-      .app-wrapper {
-        padding-bottom: 72px; /* Prevent overlap with sticky bar */
+      body {
+        padding-bottom: 72px;
       }
     }
 
     /* ===== Footer ===== */
     footer {
-      background-color: #33261D;
-      color: #a39388;
+      background: #050505;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-muted);
       text-align: center;
-      padding: 30px 24px;
-      font-size: 11px;
-      margin-top: auto;
+      padding: 40px 24px;
+      font-size: 12px;
     }
 
     footer a {
-      color: #a39388;
-      text-decoration: underline;
-      margin: 0 10px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      margin: 0 12px;
+      transition: color 0.2s;
+    }
+
+    footer a:hover {
+      color: var(--accent);
+    }
+
+    .footer-links {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    /* ===== Voice Detail Section ===== */
+    .voice-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 48px;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 28px;
+      padding: 48px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+      margin-top: 40px;
+    }
+
+    @media (max-width: 840px) {
+      .voice-grid {
+        grid-template-columns: 1fr;
+        padding: 32px;
+      }
+    }
+
+    .voice-info-card {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      text-align: left;
+    }
+
+    .voice-feature-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .voice-feature-icon {
+      font-size: 24px;
+      background: rgba(244, 162, 97, 0.1);
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(244, 162, 97, 0.2);
+      flex-shrink: 0;
+    }
+
+    .voice-feature-item h4 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+
+    .voice-feature-item p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .voice-visual-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      min-height: 280px;
+    }
+
+    .waveform-mockup {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 100px;
+      width: 100%;
+    }
+
+    .wave-bar {
+      width: 6px;
+      background: var(--gradient-accent);
+      border-radius: 3px;
+      animation: wavePulse 1.2s ease-in-out infinite alternate;
+    }
+
+    @keyframes wavePulse {
+      0% {
+        transform: scaleY(0.3);
+      }
+      100% {
+        transform: scaleY(1);
+      }
+    }
+
+    .voice-bubble {
+      background: rgba(244, 162, 97, 0.08);
+      border: 1px solid var(--accent);
+      border-radius: 18px;
+      padding: 14px 20px;
+      font-size: 14px;
+      color: var(--text-primary);
+      text-align: center;
+      font-weight: 700;
+      box-shadow: var(--glow-shadow);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    /* ===== Comparison Table ===== */
+    .comparison-wrapper {
+      max-width: 800px;
+      margin: 60px auto 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .comparison-title {
+      font-size: 20px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 24px;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      color: var(--text-primary);
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .comparison-table th {
+      font-weight: 700;
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .comparison-table th:first-child {
+      border-top-left-radius: 12px;
+      border-bottom-left-radius: 12px;
+    }
+
+    .comparison-table th:last-child {
+      border-top-right-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
+
+    .comparison-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .feature-name {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .limit-val {
+      color: var(--text-secondary);
+    }
+
+    .premium-val {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .premium-val .subtext {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 400;
+      display: block;
+      margin-top: 2px;
+    }
+
+    @media (max-width: 576px) {
+      .comparison-wrapper {
+        padding: 20px 16px;
+      }
+      .comparison-table th,
+      .comparison-table td {
+        padding: 12px 10px;
+        font-size: 12px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <div class="app-wrapper">
+  <!-- Navigation -->
+  <nav class="container">
+    <div class="logo">
+      <span>🐶🐱</span> わんにゃん翻訳機
+    </div>
+    <a href="/" id="nav-cta-btn" class="btn btn-secondary" style="padding: 8px 20px; font-size: 13px;">開く</a>
+  </nav>
 
-    <!-- ===== 1. Hero Section ===== -->
-    <header class="hero">
-      <div class="hero-badge">🐾 登録後最初の1週間は毎日3回無料！</div>
-      <div class="hero-illustration">
-        <span>🐶</span>
-        <span>🐱</span>
-      </div>
-      <h1 class="hero-title">
-        あなたの子の気持ち、<br><span>わかりますか？</span>
-      </h1>
-      <p class="hero-subtitle">
-        AIがあなたの愛犬・愛猫の表情や姿勢から、今の感情状態をリアルに翻訳します🐾
-      </p>
-      
-      <!-- Counter Badge -->
-      <div id="diagnose-counter" style="margin-bottom: 20px; font-size: 14px; font-weight: 700; color: var(--text-main); display: none; background: rgba(244, 162, 97, 0.08); padding: 8px 16px; border-radius: 20px; align-items: center; justify-content: center; gap: 4px; border: 1.5px solid rgba(244, 162, 97, 0.2); max-width: fit-content; margin-left: auto; margin-right: auto;">
-        🎉 累計 <span id="diagnose-count-val" style="color: var(--primary-dark); font-size: 18px; font-weight: 900;">0</span> 人が診断しました！
-      </div>
-
-      <a href="https://wanwan-translator.web.app" class="btn-cta">無料で診断してみる</a>
-    </header>
-
-    <!-- ===== 2. Diagnosis Demo Section ===== -->
-    <section class="demo section">
-      <div class="section-title-wrap">
-        <span class="section-tag">DIAGNOSIS DEMO</span>
-        <h2 class="section-title">アプリの翻訳イメージ</h2>
-      </div>
-      
-      <div class="demo-container">
-        <!-- Photo Diagnosis Mock -->
-        <div class="phone-mock reveal">
-          <div class="phone-screen">
-            <div class="demo-type-title">📸 写真診断</div>
-            <div class="demo-photo-box">
-              <div class="demo-img-placeholder">🐕</div>
-              <div class="demo-balloon">「ごはん！ごはん！はやくたべたいワン！🍚✨」</div>
-            </div>
-          </div>
+  <!-- ===== 1. Hero Section ===== -->
+  <section class="hero-section">
+    <div class="container hero-grid">
+      <div class="hero-info">
+        <div class="hero-badge">🐾 初回3回・登録後7日間は無料診断！</div>
+        <h1 class="hero-title">
+          あなたの子の気持ち、<br><span>AIが読み解く</span>
+        </h1>
+        <p class="hero-desc">
+          写真・行動・鳴き声から、愛犬・愛猫の心をリアルタイムに翻訳。あの子の感情状態をAIが代弁します。
+        </p>
+        
+        <!-- Counter Badge -->
+        <div id="diagnose-counter" style="margin-bottom: 24px; font-size: 14px; font-weight: 700; display: none; background: rgba(244, 162, 97, 0.08); padding: 8px 16px; border-radius: 20px; align-items: center; gap: 6px; border: 1px solid rgba(244, 162, 97, 0.2); width: fit-content;">
+          🎉 累計 <span id="diagnose-count-val" style="color: var(--accent); font-size: 18px; font-weight: 900;">0</span> 人が診断しました！
         </div>
 
-        <!-- Behavior Diagnosis Mock -->
-        <div class="phone-mock reveal">
+        <div class="hero-ctas">
+          <a href="/" id="hero-cta-primary" class="btn btn-primary">無料で試してみる</a>
+        </div>
+      </div>
+      <div class="mockup-wrapper">
+        <div class="phone-mockup">
           <div class="phone-screen">
-            <div class="demo-type-title">🐾 行動診断</div>
-            <div class="demo-photo-box">
-              <div style="font-size: 13px; font-weight: bold; text-align: left; margin-bottom: 6px; color: var(--text-main);">選択した仕草:</div>
-              <div style="font-size: 12px; background: #eef2f5; padding: 6px 12px; border-radius: 8px; text-align: left; margin-bottom: 10px;">🐈 喉をゴロゴロ鳴らす</div>
-              <div class="demo-balloon" style="border-color: var(--secondary); color: var(--secondary-dark); background: var(--secondary-light);">「とてもリラックスして甘えたい気分だにゃん❤️」</div>
+            <div class="mock-header">🐶 わんにゃん翻訳機</div>
+            <div class="mock-content">
+              <div class="mock-card">
+                <div class="mock-photo">🐕</div>
+                <div class="mock-btn">気持ちを読み取る！</div>
+              </div>
+              <div class="mock-result">
+                <strong>今の気持ち</strong><br>
+                「早くお散歩に行こうよ！しっぽ振るの見て！」🐾
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- ===== 3. Pomeranian Result Card Section ===== -->
-    <section class="result-sample section">
-      <div class="section-title-wrap">
-        <span class="section-tag">RESULT SAMPLE</span>
+  <!-- ===== 2. 3 Translation Methods Section ===== -->
+  <section class="methods-section section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Features</span>
+        <h2 class="section-title">3つの診断アプローチ</h2>
+        <p class="section-subtitle">最新AI（Claude + Whisper）を活用した、多角的な診断システム。</p>
+      </div>
+      
+      <div class="methods-grid">
+        <!-- Photo -->
+        <div class="method-card reveal">
+          <div class="method-icon">📷</div>
+          <h3>写真診断</h3>
+          <p>写真を撮るかアップロードするだけで、AIが瞳の輝きや耳の角度、姿勢から細かく感情分析。今のあの子の気持ちをリアルに表現します。</p>
+        </div>
+
+        <!-- Behavior -->
+        <div class="method-card reveal">
+          <div class="method-icon">🐾</div>
+          <h3>行動診断</h3>
+          <p>「しっぽを大きく振る」「隅でじっとしている」など、今あの子が見せている複数の仕草を選択するだけで、行動の理由と対処法を解説します。</p>
+        </div>
+
+        <!-- Voice -->
+        <div class="method-card reveal">
+          <div class="method-icon">🎤 <span class="badge-new">NEW</span></div>
+          <h3>鳴き声診断</h3>
+          <p>スマホマイクによるリアルタイム録音や、お手持ちの動画・音声ファイルをアップロードするだけで、AIが鳴き声をテキスト化し感情を判別します。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 3. Diagnosis Result Sample Section ===== -->
+  <section class="sample-section section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Sample</span>
         <h2 class="section-title">翻訳結果のサンプル</h2>
+        <p class="section-subtitle">AIならではのビジュアル感情メーターと、ペット目線のメッセージ。</p>
       </div>
 
-      <div class="result-card reveal">
-        <div class="result-header">
-          <div class="result-avatar">🐕</div>
-          <div class="result-meta">
-            <h4>ポン太ちゃん</h4>
-            <p>ポメラニアン（オス・3歳）</p>
+      <div class="sample-wrapper reveal">
+        <div class="sample-header">
+          <div class="sample-avatar">🐕</div>
+          <div class="sample-meta">
+            <h4>ココちゃん</h4>
+            <p>トイプードル（女の子・2歳）</p>
           </div>
         </div>
 
         <!-- Emotion Bars -->
-        <div class="emotion-section">
-          <div class="emotion-title">現在の感情状態</div>
-          <div class="emotion-bar-wrap">
-            
-            <div class="emotion-bar-item">
-              <span class="emotion-label">喜び</span>
-              <div class="emotion-bar-bg">
-                <div class="emotion-bar-fill" style="width: 45%; background: #ffd700;"></div>
+        <div class="sample-emotion">
+          <div class="sample-emotion-title">現在の感情比率</div>
+          <div class="sample-bar-list">
+            <div class="sample-bar-item">
+              <span class="sample-bar-label">喜び</span>
+              <div class="sample-bar-track">
+                <div class="sample-bar-fill" style="width: 75%; background: #ffd700;"></div>
               </div>
-              <span class="emotion-val">45%</span>
+              <span class="sample-bar-val">75%</span>
             </div>
-
-            <div class="emotion-bar-item">
-              <span class="emotion-label">興奮</span>
-              <div class="emotion-bar-bg">
-                <div class="emotion-bar-fill" style="width: 40%; background: #ff8c00;"></div>
+            <div class="sample-bar-item">
+              <span class="sample-bar-label">興奮</span>
+              <div class="sample-bar-track">
+                <div class="sample-bar-fill" style="width: 15%; background: #ff8c00;"></div>
               </div>
-              <span class="emotion-val">40%</span>
+              <span class="sample-bar-val">15%</span>
             </div>
-
-            <div class="emotion-bar-item">
-              <span class="emotion-label">不安</span>
-              <div class="emotion-bar-bg">
-                <div class="emotion-bar-fill" style="width: 10%; background: #6495ed;"></div>
+            <div class="sample-bar-item">
+              <span class="sample-bar-label">不安</span>
+              <div class="sample-bar-track">
+                <div class="sample-bar-fill" style="width: 5%; background: #6495ed;"></div>
               </div>
-              <span class="emotion-val">10%</span>
+              <span class="sample-bar-val">5%</span>
             </div>
-
-            <div class="emotion-bar-item">
-              <span class="emotion-label">眠気</span>
-              <div class="emotion-bar-bg">
-                <div class="emotion-bar-fill" style="width: 5%; background: #9370db;"></div>
+            <div class="sample-bar-item">
+              <span class="sample-bar-label">眠気</span>
+              <div class="sample-bar-track">
+                <div class="sample-bar-fill" style="width: 5%; background: #9370db;"></div>
               </div>
-              <span class="emotion-val">5%</span>
+              <span class="sample-bar-val">5%</span>
             </div>
-
           </div>
         </div>
 
         <!-- Bubble Voice -->
-        <div class="voice-bubble">
-          おやつを待っている時だから、とっても嬉しくてワクワクしているワン！はやくおやつ頂戴ワン！🍭
+        <div class="sample-bubble">
+          おもちゃを投げてもらって、とっても嬉しいワン！ずっとこれで遊びたいワン！もっと投げて投げて〜！🥎✨
         </div>
 
         <!-- Advice -->
-        <div class="advice-box">
+        <div class="sample-advice">
           <strong>💡 飼い主様へのアドバイス</strong>
-          非常に興奮して喜んでいます！おねだりポーズに応えて、少しだけおやつをあげて褒めてあげてください。
+          現在、興奮と喜びが非常に高まっています。十分に引っ張りっこ遊びなどを楽しんだ後は、お水をあげて落ち着かせてあげましょう。
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- ===== 4. Features Section ===== -->
-    <section class="features section">
-      <div class="section-title-wrap">
-        <span class="section-tag">FEATURES</span>
-        <h2 class="section-title">愛犬・愛猫と繋がる機能</h2>
+  <!-- ===== 3.5 Voice Diagnosis Detail Section ===== -->
+  <section class="voice-detail-section section" style="background: #0d0d0d; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag" style="background: rgba(244, 162, 97, 0.12); padding: 6px 16px; border-radius: 20px; border: 1px solid rgba(244, 162, 97, 0.3); color: var(--accent); font-size: 13px; font-weight: 700;">有料プラン限定新機能</span>
+        <h2 class="section-title">🎤 鳴き声診断</h2>
+        <p class="section-subtitle">最新AI技術で、愛犬・愛猫の「声」から心の声を翻訳。</p>
       </div>
 
-      <div class="features-grid">
-        <!-- Photo -->
-        <div class="feature-card reveal">
-          <div class="feature-icon">📷</div>
-          <div class="feature-info">
-            <h3>写真診断</h3>
-            <p>スマホで写真を撮るだけでAIが表情や姿勢をキャッチ。瞬時に感情を分析して代弁します。</p>
+      <div class="voice-grid reveal">
+        <div class="voice-info-card">
+          <div class="voice-feature-item">
+            <span class="voice-feature-icon">🔴</span>
+            <div>
+              <h4>リアルタイム録音に対応</h4>
+              <p>スマートフォンやPCのマイクを使って、その場であの子の鳴き声を直接録音して診断できます。ボタンを押すだけの簡単操作です。</p>
+            </div>
+          </div>
+          <div class="voice-feature-item">
+            <span class="voice-feature-icon">📤</span>
+            <div>
+              <h4>音声・動画ファイルアップロード</h4>
+              <p>過去に撮影したお気に入りの動画（mp4, mov）や音声ファイル（mp3, wav, m4a）をアップロードするだけで、AIが自動で音声を抽出して感情を読み解きます。</p>
+            </div>
+          </div>
+          <div class="voice-feature-item">
+            <span class="voice-feature-icon">🧠</span>
+            <div>
+              <h4>AIによる高度な感情判定</h4>
+              <p>録音された鳴き声をAI（Whisper + Claude）が聞き取り、声のトーンや長さ、周囲の状況を総合的に分析して、あの子の感情を言葉にして代弁します。</p>
+            </div>
           </div>
         </div>
 
-        <!-- Behavior -->
-        <div class="feature-card reveal">
-          <div class="feature-icon">🐾</div>
-          <div class="feature-info">
-            <h3>行動診断</h3>
-            <p>「しっぽを立てる」などの今見せている仕草や状態をリストから選ぶだけで、AIがその裏に隠された心理を解説します。</p>
+        <div class="voice-visual-card">
+          <div class="waveform-mockup">
+            <div class="wave-bar" style="height: 20px; animation-delay: 0.1s;"></div>
+            <div class="wave-bar" style="height: 40px; animation-delay: 0.3s;"></div>
+            <div class="wave-bar" style="height: 60px; animation-delay: 0.2s;"></div>
+            <div class="wave-bar" style="height: 30px; animation-delay: 0.4s;"></div>
+            <div class="wave-bar" style="height: 70px; animation-delay: 0.15s;"></div>
+            <div class="wave-bar" style="height: 50px; animation-delay: 0.25s;"></div>
+            <div class="wave-bar" style="height: 90px; animation-delay: 0.35s;"></div>
+            <div class="wave-bar" style="height: 40px; animation-delay: 0.05s;"></div>
+            <div class="wave-bar" style="height: 20px; animation-delay: 0.45s;"></div>
           </div>
-        </div>
-
-        <!-- Chat -->
-        <div class="feature-card reveal">
-          <div class="feature-icon">💬</div>
-          <div class="feature-info">
-            <h3>愛犬・愛猫会話</h3>
-            <p>まるでチャットするように会話ができます。名前や犬種・性別に合わせたキャラクターで返答します。</p>
+          <div class="voice-bubble">
+            「お腹すいたワン！早くごはんちょうだい！」🐶🐾
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- ===== 5. Pricing Section ===== -->
-    <section class="pricing section">
-      <div class="section-title-wrap">
-        <span class="section-tag">PRICING</span>
-        <h2 class="section-title">料金プラン</h2>
+  <!-- ===== 4. Pricing Section ===== -->
+  <section class="pricing-section section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Pricing</span>
+        <h2 class="section-title">選べるプラン</h2>
+        <p class="section-subtitle">あなたのご利用頻度に合わせて、無駄のない料金形態を選べます。</p>
       </div>
 
-      <div class="pricing-wrap">
+      <div class="pricing-grid">
         <!-- Trial -->
         <div class="price-card reveal">
           <div class="price-name">お試しプラン</div>
-          <div class="price-amount">無料 <span>(3回お試し)</span></div>
+          <div class="price-val">0円</div>
+          <p class="price-desc">登録後まずは完全に無料でお試しいただけます。</p>
           <ul class="price-features">
-            <li>登録後まずは3回まで無料</li>
-            <li>すべての機能を体験可能</li>
+            <li>初回3回無料診断</li>
+            <li>登録後7日間有効</li>
+            <li>写真診断・行動診断のみ</li>
             <li>クレジットカード登録不要</li>
           </ul>
         </div>
 
         <!-- Monthly -->
         <div class="price-card featured reveal">
-          <div class="price-badge">おすすめ</div>
           <div class="price-name">月額プラン</div>
-          <div class="price-amount">480円 <span>/月</span></div>
+          <div class="price-val">480円 <span>/月</span></div>
+          <p class="price-desc">日常的にあの子の心を通わせたい愛犬家・愛猫家に最適。</p>
           <ul class="price-features">
-            <li>すべての診断が使い放題</li>
-            <li>月100回までたっぷりと利用可能</li>
-            <li>いつでも簡単にWebから解約可能</li>
+            <li>毎月100回たっぷり使える</li>
+            <li>いつでも簡単に解約可能</li>
+            <li>写真・行動・会話・診断履歴</li>
+            <li>🎤 鳴き声診断 (NEW)</li>
           </ul>
         </div>
 
         <!-- Pay per use -->
         <div class="price-card reveal">
           <div class="price-name">都度購入</div>
-          <div class="price-amount">80円 <span>/回</span></div>
+          <div class="price-val">80円 <span>/回</span></div>
+          <p class="price-desc">使いたいときだけ。定額の支払いに抵抗がある方に。</p>
           <ul class="price-features">
-            <li>使いたい分だけその場で決済</li>
-            <li>面倒な定額サブスク契約不要</li>
-            <li>追加チャージですぐに1回診断</li>
+            <li>定期課金のご契約不要</li>
+            <li>都度決済で1枚ずつ追加</li>
+            <li>有効期限なしのチケット</li>
+            <li>🎤 鳴き声診断 (NEW)</li>
           </ul>
         </div>
       </div>
-    </section>
 
-    <!-- ===== 6. Final CTA Section ===== -->
-    <section class="section" style="text-align: center; background: linear-gradient(180deg, var(--white) 0%, var(--primary-light) 100%);">
-      <div style="font-size: 54px; margin-bottom: 16px;">💬🐶🐱</div>
-      <h2 class="hero-title" style="font-size: 22px;">さあ、あなたの子の気持ちを聞いてみよう</h2>
-      <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 24px;">簡単なステップですぐにスタートできます。</p>
-      <a href="https://wanwan-translator.web.app" class="btn-cta">無料で始める</a>
-    </section>
-
-    <!-- Sticky Bottom Bar for Mobile -->
-    <div class="sticky-cta">
-      <a href="https://wanwan-translator.web.app" class="btn-cta">無料で診断してみる →</a>
-    </div>
-
-    <!-- ===== Footer ===== -->
-    <footer>
-      <div style="margin-bottom: 12px;">
-        <a href="terms.html">利用規約</a>
-        <a href="privacy.html">プライバシーポリシー</a>
-        <a href="cancel.html">解約はこちら</a>
-        <a href="contact.html">お問い合わせ</a>
+      <!-- ===== Feature Comparison Table ===== -->
+      <div class="comparison-wrapper reveal" style="margin-top: 60px;">
+        <h3 class="comparison-title">機能比較表</h3>
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>機能</th>
+              <th>無料プラン（お試し）</th>
+              <th>有料プラン（月額・都度）</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="feature-name">写真診断</td>
+              <td class="limit-val">✅（最大3回まで）</td>
+              <td class="premium-val">✅ 無制限 <span class="subtext">※月額は100回/月</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">行動診断</td>
+              <td class="limit-val">✅（最大3回まで）</td>
+              <td class="premium-val">✅ 無制限 <span class="subtext">※月額は100回/月</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">🎤 鳴き声診断</td>
+              <td class="limit-val">❌ 利用不可</td>
+              <td class="premium-val">✅ 利用可能 <span class="badge-new">NEW</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">診断履歴</td>
+              <td class="limit-val">❌ 保存・閲覧不可</td>
+              <td class="premium-val">✅ 保存・閲覧可能 <span class="subtext">（最大20件）</span></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <p>&copy; 2026 わんにゃん翻訳機 🐾 Powered by Claude AI</p>
-      <a href="admin.html" style="color: #a39388; text-decoration: none; font-size: 9px; display: block; margin-top: 8px; opacity: 0.5;">管理者ページ</a>
-    </footer>
 
-  </div> <!-- End App Wrapper -->
+      <div class="donation-notice reveal">
+        🐾 診断1回につき5円を、提携する保護犬・保護猫の支援活動に寄付しています。
+      </div>
+    </div>
+  </section>
 
-  <!-- Firebase SDK for Maintenance Checking -->
+  <!-- ===== 5. Social Contribution Section ===== -->
+  <section class="donation-section section">
+    <div class="container">
+      <div class="donation-box reveal">
+        <div class="donation-info">
+          <span class="section-tag" style="margin-bottom: 8px;">Social Contribution</span>
+          <h3>あなたの診断が、<br>保護犬・保護猫を救う</h3>
+          <p style="margin-top: 12px;">
+            私達は、すべての動物たちが幸せに暮らせる未来を願っています。「わんにゃん翻訳機」での診断1回につき、5円を殺処分ゼロを目指す保護犬・保護猫団体への物資や医療支援費として寄付しています。<br><br>
+            あの子との絆を深めるアクションが、同時に新しい家族を待っている次のあの子達を守る一歩になります。
+          </p>
+        </div>
+        <div class="donation-visual">
+          <div class="donation-visual-icon">❤️</div>
+          <div class="donation-visual-stat">1診断 ＝ 5円寄付</div>
+          <div class="donation-visual-text">診断履歴から、寄付への積み上げ状況を間接的にご確認いただけます。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 6. FAQ Section ===== -->
+  <section class="faq-section section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">FAQ</span>
+        <h2 class="section-title">よくある質問</h2>
+        <p class="section-subtitle">サービスに関する不明点をまとめました。</p>
+      </div>
+
+      <div class="faq-list">
+        <details class="faq-item reveal">
+          <summary class="faq-question">Q. 写真診断ではどのような写真が良いですか？</summary>
+          <div class="faq-answer">
+            ペットの表情（瞳、耳）や姿勢（立っている、丸まっている）がはっきりと写っているものが最も精度良く解析されます。明るい場所で正面から撮った写真がおすすめです。
+          </div>
+        </details>
+
+        <details class="faq-item reveal">
+          <summary class="faq-question">Q. 月額プランはいつでも解約できますか？</summary>
+          <div class="faq-answer">
+            はい、マイページの「解約手続きはこちら」より、いつでもご自身で即座に自動更新を停止することができます。解約手数料などは一切発生しません。
+          </div>
+        </details>
+
+        <details class="faq-item reveal">
+          <summary class="faq-question">Q. 鳴き声診断の対応ファイル形式は？</summary>
+          <div class="faq-answer">
+            マイクでの直接録音のほか、アップロードは mp3 / wav / m4a 等の音声ファイルのほか、mp4 / mov 等の動画ファイルに対応しています。動画ファイルの場合は自動で音声トラックを抽出して解析します。
+          </div>
+        </details>
+
+        <details class="faq-item reveal">
+          <summary class="faq-question">Q. 虹の橋モードの機能は有料ですか？</summary>
+          <div class="faq-answer">
+            いいえ、旅立った愛犬・愛猫を登録し、思い出アルバムや、虹の橋での会話を楽しむ「虹の橋モード」はすべての機能を完全に無料でご利用いただけます。
+          </div>
+        </details>
+
+        <details class="faq-item reveal">
+          <summary class="faq-question">Q. 本当に寄付されているのですか？</summary>
+          <div class="faq-answer">
+            はい。皆様に診断いただいた回数に応じた寄付金額を集計し、保護犬・保護猫の支援活動を行う非営利団体へ寄付しております。寄付実績や活動報告は、運営SNSを通じて順次公開してまいります。
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 7. Final CTA Section ===== -->
+  <section class="final-cta-section section">
+    <div class="container">
+      <h2>さあ、あの子の気持ちを聞いてみよう</h2>
+      <p>簡単な会員登録ですぐに無料でお試しいただけます。</p>
+      <a href="/" id="final-cta-btn" class="btn btn-primary">無料で始める</a>
+    </div>
+  </section>
+
+  <!-- Sticky Bottom Bar for Mobile -->
+  <div class="sticky-cta">
+    <a href="/" id="sticky-cta-btn" class="btn btn-primary" style="width: 100%; box-sizing: border-box;">無料で診断してみる →</a>
+  </div>
+
+  <!-- ===== Footer ===== -->
+  <footer>
+    <div class="footer-links">
+      <a href="terms.html">利用規約</a>
+      <a href="privacy.html">プライバシーポリシー</a>
+      <a href="cancel.html">解約はこちら</a>
+      <a href="contact.html">お問い合わせ</a>
+    </div>
+    <p>&copy; 2026 わんにゃん翻訳機 🐾 Powered by Claude AI</p>
+    <a href="admin.html" style="color: var(--text-muted); text-decoration: none; font-size: 9px; display: block; margin-top: 8px; opacity: 0.5;">管理者ページ</a>
+  </footer>
+
+  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
@@ -879,7 +1511,7 @@
           }
         }
       } catch (e) {
-        console.warn("Maintenance check failed:", e);
+        // Ignored
       }
     });
 
@@ -900,7 +1532,6 @@
           }
         }
       } catch (e) {
-        console.warn("Counter check failed, fallback to read-only:", e);
         try {
           const counterSnap = await getDoc(counterRef);
           if (counterSnap.exists()) {
@@ -913,7 +1544,7 @@
             }
           }
         } catch (readErr) {
-          console.error("Counter read failed:", readErr);
+          // Ignored
         }
       }
     })();

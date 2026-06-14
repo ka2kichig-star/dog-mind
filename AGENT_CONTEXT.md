@@ -112,7 +112,9 @@
 - **メンテナンスモード**: Firestore上の設定変更で、一般ユーザーを強制的に `maintenance.html` にリダイレクト。
 - **システムお知らせバナー**: Firestoreから全画面上部に動的に赤色のお知らせメッセージを配信。
 - **SNS WebView制限対策**: LINE, Instagram, Threads, Twitter等のアプリ内ブラウザ（Google OAuth制限環境）を検出した際、外部ブラウザへの誘導モーダル（URLコピー機能付き）を強制表示。
+- **プライベートモード制限対策**: Safari, Firefoxのプライベートモード、およびChromeのシークレットモードを検知した際、Googleログインやログイン状態の保持ができない制限について警告モーダルを強制表示。
 - **アカウント停止 (BAN)**: Firestoreで `isBanned: true` とされたユーザーのアクセス制限および強制ログアウト。
+
 
 ---
 

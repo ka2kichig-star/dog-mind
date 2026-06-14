@@ -100,6 +100,11 @@
     }
 
     /* ===== Animations ===== */
+    @keyframes wave {
+      0%, 100% { transform: scaleY(1); }
+      50% { transform: scaleY(2); }
+    }
+
     @keyframes fadeIn {
       from {
         opacity: 0;
@@ -888,6 +893,7 @@
     }
 
     .login-banner {
+      display: none; /* 初期状態は非表示 */
       width: 100%;
       max-width: 480px;
       background: var(--primary);
@@ -2048,6 +2054,17 @@
     </div>
   </div>
 
+  <!-- Private Mode Warning Modal -->
+  <div id="private-mode-overlay" class="instagram-block-overlay">
+    <div class="instagram-block-content">
+      <div class="instagram-block-icon">🔒</div>
+      <h2 id="private-mode-title">🔒 プライベートモードでは使用できません</h2>
+      <p id="private-mode-desc" style="margin-bottom: 24px;">SafariのプライベートモードではGoogleログインや<br>ログイン状態の保持ができません。<br>通常のSafariで開いてからご利用ください。</p>
+      <button onclick="closePrivateModeModal()" class="btn" style="background:#999; color:#fff; font-weight:700; border-radius:28px; padding:14px 24px; border:none; width:100%; cursor:pointer; font-family:inherit; transition: all 0.2s;">閉じる</button>
+    </div>
+  </div>
+
+
   <!-- アプリ紹介への固定ボタン -->
   <a href="/lp.html" class="floating-info-btn">🏠 アプリ紹介</a>
 
@@ -2221,6 +2238,32 @@
 
         <!-- Behavior Tab -->
         <div id="tab-behavior" class="tab-panel">
+          <!-- 🎤 鳴き声診断 (NEW) -->
+          <div id="voice-diagnosis-section" style="background: var(--primary-light); border: 2px dashed var(--primary); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
+            <div style="font-weight: bold; font-size: 14px; margin-bottom: 10px; color: var(--primary-dark);">🎤 鳴き声診断（有料限定）</div>
+            <div id="voice-status" style="font-size: 12px; margin-bottom: 12px; color: #666; line-height: 1.5; white-space: pre-line;">鳴き声を録音するか、音声・動画ファイルをアップロードして
+AIに解析させることができます。
+※ 月額プランまたは都度購入（80円/回）でご利用いただけます。</div>
+            
+            <div id="waveform-container" style="display: none; align-items: center; justify-content: center; gap: 4px; height: 30px; margin-bottom: 12px;">
+              <div style="width: 4px; height: 15px; background: #ff5e5e; border-radius: 2px; animation: wave 0.8s ease-in-out infinite;"></div>
+              <div style="width: 4px; height: 25px; background: #ff5e5e; border-radius: 2px; animation: wave 0.8s ease-in-out infinite 0.1s;"></div>
+              <div style="width: 4px; height: 10px; background: #ff5e5e; border-radius: 2px; animation: wave 0.8s ease-in-out infinite 0.2s;"></div>
+              <div style="width: 4px; height: 28px; background: #ff5e5e; border-radius: 2px; animation: wave 0.8s ease-in-out infinite 0.3s;"></div>
+              <div style="width: 4px; height: 18px; background: #ff5e5e; border-radius: 2px; animation: wave 0.8s ease-in-out infinite 0.4s;"></div>
+            </div>
+            
+            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+              <button type="button" id="voice-record-btn" class="small-btn" style="background: #ff5e5e; display: flex; align-items: center; gap: 4px; padding: 8px 16px; border-radius: 20px;" onclick="toggleVoiceRecording()">
+                🔴 録音開始
+              </button>
+              <button type="button" class="small-btn" style="background: #757575; display: flex; align-items: center; gap: 4px; padding: 8px 16px; border-radius: 20px;" onclick="document.getElementById('voice-file-input').click()">
+                📁 音声・動画ファイルを選ぶ
+              </button>
+            </div>
+            <input type="file" id="voice-file-input" accept="audio/*,video/*" style="display: none;" onchange="handleVoiceFile(event)">
+          </div>
+
           <div class="hint">今の行動をすべて選んでね（複数OK）</div>
           <div class="chips" id="behavior-chips"></div>
           <textarea id="situation" placeholder="状況を追加（任意）例：散歩から帰ってきた直後、来客があった…"></textarea>
@@ -2529,6 +2572,19 @@
 
       <button class="cancel-btn" onclick="closeModal()">キャンセル</button>
       <div class="polling-msg" id="polling-msg" style="display:none">⏳ 支払い完了を確認中…</div>
+    </div>
+  </div>
+
+  <!-- ゲスト用登録モーダル -->
+  <div class="pay-modal" id="guest-register-modal">
+    <div class="pay-box">
+      <div style="font-size:44px;margin-bottom:10px">🎁</div>
+      <h3>あと0回です</h3>
+      <p style="margin-bottom: 20px;">続けて使うには無料の会員登録が必要です。<br>登録すると、さらに7日間無料で使えます！</p>
+      <button class="btn" style="width:100%; box-sizing: border-box; margin-bottom: 12px; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="document.getElementById('guest-register-modal').classList.remove('show'); loginWithGoogle('guest-modal')">
+        無料で登録する
+      </button>
+      <button class="cancel-btn" onclick="document.getElementById('guest-register-modal').classList.remove('show')">あとで</button>
     </div>
   </div>
 
@@ -2842,7 +2898,11 @@
 
       // 月額プラン有効チェック
       let isMonthlyActive = false;
-      if ((data.monthlyPlanActive || data.subscriptionStatus === "active") && data.monthlyPlanExpiry) {
+      if (data) {
+        const activeFlags = [data.monthlyPlanActive, data.isPremium, data.subscriptionStatus];
+        isMonthlyActive = activeFlags.some(flag => flag === true || flag === 'true' || flag === 'active');
+      }
+      if (!isMonthlyActive && data.monthlyPlanExpiry) {
         const expiry = data.monthlyPlanExpiry?.toDate ? data.monthlyPlanExpiry.toDate() : null;
         isMonthlyActive = expiry && expiry > new Date();
       }
@@ -2960,13 +3020,18 @@
           const snsBanner = document.getElementById('sns-webview-banner');
           if (snsBanner) snsBanner.style.display = 'none';
         }
-        banner.style.display = 'block';
+        // 未ログイン時のお試し無料枠の表示制御（guestCount < 3 なら非表示、>= 3 なら表示）
+        const guestCount = parseInt(localStorage.getItem('guestCount')) || 0;
+        if (banner) {
+          banner.style.display = guestCount >= 3 ? 'block' : 'none';
+        }
         badge.classList.remove('monthly-active');
         badge.textContent = '';
         window._currentUser = null;
         if (logoutBtn) logoutBtn.style.display = 'none';
         if (cancelBtn) cancelBtn.style.display = 'none';
         window.updateTicketBadgeUI(0, false, 0, 100);
+        if (typeof window.updateGuestBadge === 'function') window.updateGuestBadge();
       }
       // ログイン状態が変わったらボタンの有効無効を更新
       updateSubmitButtons();
@@ -3103,12 +3168,23 @@
     // Auth
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     async function loginWithGoogle(source) {
+      // Check Private mode first
+      if (window.isPrivateMode) {
+        if (window.showPrivateModeModal) {
+          window.showPrivateModeModal();
+        } else {
+          alert('🔒 プライベートモードでは使用できません\n\nSafariのプライベートモードではGoogleログインやログイン状態の保持ができません。通常のSafariで開いてからご利用ください。');
+        }
+        return;
+      }
+
       // Check WebView environment first
       if (window.isWebViewEnv && window.isWebViewEnv()) {
         const msg = window.getWebViewWarningMessage ? window.getWebViewWarningMessage() : 'このアプリ内ブラウザではGoogleログインができません。外部ブラウザで開いてからログインしてください。';
         alert(msg);
         return;
       }
+
 
       const bannerCheckbox = document.getElementById('terms-checkbox');
       const historyCheckbox = document.getElementById('terms-checkbox-history');
@@ -3683,15 +3759,29 @@
       if (!analyzeBtn || !behaviorBtn || !startBtn) return;
 
       if (!user) {
-        // 未ログイン時：グレーアウトクラスを付与し、disabledは解除してタップ可能に（アラートを出すため）
-        analyzeBtn.disabled = false;
-        analyzeBtn.classList.add('auth-disabled');
+        let count = parseInt(localStorage.getItem('guestCount')) || 0;
+        if (count < 3) {
+          // ゲストでお試し無料枠が残っている場合：通常のボタン有効無効ロジックを適用（グレーアウトしない）
+          analyzeBtn.classList.remove('auth-disabled');
+          analyzeBtn.disabled = !imageBase64;
 
-        behaviorBtn.disabled = false;
-        behaviorBtn.classList.add('auth-disabled');
+          behaviorBtn.classList.remove('auth-disabled');
+          behaviorBtn.disabled = selectedBehaviors.length === 0;
 
-        startBtn.disabled = false;
-        startBtn.classList.add('auth-disabled');
+          startBtn.classList.remove('auth-disabled');
+          const dogName = document.getElementById('dog-name')?.value.trim();
+          startBtn.disabled = !dogName;
+        } else {
+          // ゲストでお試し無料枠が終了している場合：ログインを促すためグレーアウト表示（クリックでモーダル表示するため disabled = false）
+          analyzeBtn.disabled = false;
+          analyzeBtn.classList.add('auth-disabled');
+
+          behaviorBtn.disabled = false;
+          behaviorBtn.classList.add('auth-disabled');
+
+          startBtn.disabled = false;
+          startBtn.classList.add('auth-disabled');
+        }
       } else {
         // ログイン時：グレーアウトクラスを外し、それぞれの入力条件でdisabled状態を制御
         analyzeBtn.classList.remove('auth-disabled');
@@ -3706,11 +3796,46 @@
       }
     }
 
+    window.updateGuestBadge = function() {
+      const badge = document.getElementById('usage-badge');
+      const banner = document.getElementById('login-banner');
+      if (window._auth?.currentUser) {
+        if (banner) banner.style.display = 'none';
+        return;
+      }
+      let count = parseInt(localStorage.getItem('guestCount')) || 0;
+      let remain = Math.max(0, 3 - count);
+      if (badge) {
+        badge.style.display = 'block';
+        badge.className = 'usage-badge'; // reset
+        if (remain === 0) {
+          badge.innerHTML = '⚠️ <span style="font-size:11px">無料枠終了（登録が必要です）</span>';
+        } else {
+          badge.innerHTML = `🎁 <span style="font-size:11px">お試し無料枠: あと${remain}回</span>`;
+        }
+      }
+      if (banner) {
+        banner.style.display = count >= 3 ? 'block' : 'none';
+      }
+    };
+
+    window.incrementGuestCount = function() {
+      if (window._auth?.currentUser) return;
+      let count = parseInt(localStorage.getItem('guestCount')) || 0;
+      localStorage.setItem('guestCount', count + 1);
+      window.updateGuestBadge();
+    };
+
     async function checkAndRun(action) {
       const user = window._auth?.currentUser;
       if (!user) {
-        alert('Googleログインしてね🐶');
-        loginWithGoogle();
+        let count = parseInt(localStorage.getItem('guestCount')) || 0;
+        if (count >= 3) {
+          document.getElementById('guest-register-modal').classList.add('show');
+          return;
+        }
+        window.incrementGuestCount();
+        runAction(action);
         return;
       }
       const today = window.todayJST();
@@ -3743,7 +3868,11 @@
         isTrialPeriod = diffDays <= 7;
 
         // 月額プラン有効チェック
-        if ((data.monthlyPlanActive || data.subscriptionStatus === "active") && data.monthlyPlanExpiry) {
+        if (data) {
+          const activeFlags = [data.monthlyPlanActive, data.isPremium, data.subscriptionStatus];
+          isMonthlyActive = activeFlags.some(flag => flag === true || flag === 'true' || flag === 'active');
+        }
+        if (!isMonthlyActive && data.monthlyPlanExpiry) {
           const expiry = data.monthlyPlanExpiry?.toDate ? data.monthlyPlanExpiry.toDate() : null;
           isMonthlyActive = expiry && expiry > new Date();
         }
@@ -3840,22 +3969,23 @@
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     async function callClaude(messages, system, isFollowUp = false) {
       const user = window._auth?.currentUser;
-      if (!user) throw new Error('ログインが必要です');
-      // getIdToken(true) でキャッシュを使わずに最新のIDトークンを強制取得
-      const token = await user.getIdToken(true);
+      const headers = { 'Content-Type': 'application/json' };
+      if (!user) {
+        headers['X-Guest-Mode'] = 'true';
+      } else {
+        const token = await user.getIdToken(true);
+        headers['X-Firebase-Auth'] = token;
+      }
       const res = await fetch(CLAUDE_PROXY_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Firebase-Auth': token
-        },
+        headers: headers,
         body: JSON.stringify({ messages, system, isFollowUp })
       });
       const data = await res.json();
       if (!res.ok) {
         if (res.status === 402 || data.error === 'INSUFFICIENT_CREDITS') {
           alert('診断クレジットが不足しています。追加チケットのご購入または月額プランへの登録をお願いします。🐾');
-          await window.refreshUserUI();
+          if (user) await window.refreshUserUI();
           document.getElementById('pay-modal').classList.add('show');
         }
         const err = new Error(data.message || data.error || 'API error');
@@ -3863,7 +3993,7 @@
         err.code = data.error;
         throw err;
       }
-      if (!isFollowUp) {
+      if (!isFollowUp && user) {
         await window.refreshUserUI();
       }
       return data.text || '…';
@@ -4027,13 +4157,17 @@
       const petLabel = appMode === 'cat' ? '猫' : '犬';
 
       try {
+        const isFollowUp = window.voiceDiagnosisUsed || false;
         const text = await callClaude([{
           role: 'user',
           content: `${petLabel}の行動・鳴き声：${labels.join('、')}\n${situation ? '状況：' + situation : ''}`
         }],
           appMode === 'cat'
             ? `あなたは猫の行動学の専門家です。報告された行動・鳴き声のパターンから猫の感情状態を分析し、以下の形式で答えてください：\n\n【今の気持ち】：一言で\n【なぜそう感じてるの？】：行動の理由を2〜3文で説明\n【猫の心の声】：猫自身が話しているように、2〜3文で（日本語、タメ口、語尾に「にゃ」「にゃん」をつけて可愛く）\n【飼い主へ】：今すぐできる対応のアドバイス\n\n${personalityPrompt}\n\n絵文字を使って温かみのある回答にしてください。`
-            : `あなたは犬の行動学の専門家です。報告された行動・鳴き声のパターンから犬の感情状態を分析し、以下の形式で答えてください：\n\n【今の気持ち】：一言で\n【なぜそう感じてるの？】：行動の理由を2〜3文で説明\n【犬の心の声】：犬自身が話しているように、2〜3文で（日本語、タメ口、可愛く）\n【飼い主へ】：今すぐできる対応のアドバイス\n\n${personalityPrompt}\n\n絵文字を使って温かみのある回答にしてください。`);
+            : `あなたは犬の行動学の専門家です。報告された行動・鳴き声のパターンから犬の感情状態を分析し、以下の形式で答えてください：\n\n【今の気持ち】：一言で\n【なぜそう感じてるの？】：行動の理由を2〜3文で説明\n【犬の心の声】：犬自身が話しているように、2〜3文で（日本語、タメ口、可愛く）\n【飼い主へ】：今すぐできる対応のアドバイス\n\n${personalityPrompt}\n\n絵文字を使って温かみのある回答にしてください。`,
+          isFollowUp
+        );
+        window.voiceDiagnosisUsed = false;
         showResult('behavior-result', text);
         await saveToHistory('behavior', text);
       } catch (e) {
@@ -4041,6 +4175,284 @@
         console.error(e);
       }
       btn.textContent = '気持ちを診断する！';
+      updateSubmitButtons();
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 🎤 鳴き声診断機能
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    window.voiceDiagnosisUsed = false;
+    let voiceMediaRecorder = null;
+    let voiceChunks = [];
+    let voiceTimer = null;
+    let voiceCountdown = 10;
+
+    async function checkVoiceFeatureAccess() {
+      const user = window._auth?.currentUser;
+      if (!user) {
+        const payModalDesc = document.getElementById('pay-modal-desc');
+        if (payModalDesc) payModalDesc.textContent = '「🎤 鳴き声診断」は月額プランまたは都度購入で使えます。';
+        const monthlyCard = document.getElementById('plan-stripe-monthly');
+        if (monthlyCard) monthlyCard.style.display = 'block';
+        document.getElementById('pay-modal').classList.add('show');
+        return false;
+      }
+      const ref = window._doc(window._db, 'users', user.uid);
+      const snap = await window._getDoc(ref);
+      if (!snap.exists()) {
+        const payModalDesc = document.getElementById('pay-modal-desc');
+        if (payModalDesc) payModalDesc.textContent = '「🎤 鳴き声診断」は月額プランまたは都度購入で使えます。';
+        const monthlyCard = document.getElementById('plan-stripe-monthly');
+        if (monthlyCard) monthlyCard.style.display = 'block';
+        document.getElementById('pay-modal').classList.add('show');
+        return false;
+      }
+      const data = snap.data();
+      let isMonthlyActive = false;
+      if (data) {
+        const activeFlags = [data.monthlyPlanActive, data.isPremium, data.subscriptionStatus];
+        isMonthlyActive = activeFlags.some(flag => flag === true || flag === 'true' || flag === 'active');
+      }
+      if (!isMonthlyActive && data.monthlyPlanExpiry) {
+        const expiry = data.monthlyPlanExpiry?.toDate ? data.monthlyPlanExpiry.toDate() : null;
+        isMonthlyActive = expiry && expiry > new Date();
+      }
+      const perUseCredits = data.perUseCredits || 0;
+      
+      if (isMonthlyActive || perUseCredits > 0) {
+        return true;
+      } else {
+        const payModalDesc = document.getElementById('pay-modal-desc');
+        if (payModalDesc) payModalDesc.textContent = '「🎤 鳴き声診断」は月額プランまたは都度購入で使えます。';
+        const monthlyCard = document.getElementById('plan-stripe-monthly');
+        if (monthlyCard) monthlyCard.style.display = 'block';
+        document.getElementById('pay-modal').classList.add('show');
+        return false;
+      }
+    }
+
+    async function toggleVoiceRecording() {
+      if (voiceMediaRecorder && voiceMediaRecorder.state === 'recording') {
+        stopVoiceRecording();
+      } else {
+        await startVoiceRecording();
+      }
+    }
+
+    async function startVoiceRecording() {
+      const allowed = await checkVoiceFeatureAccess();
+      if (!allowed) return;
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        voiceChunks = [];
+        voiceMediaRecorder = new MediaRecorder(stream);
+        
+        voiceMediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) voiceChunks.push(e.data);
+        };
+        
+        voiceMediaRecorder.onstop = async () => {
+          stream.getTracks().forEach(track => track.stop());
+          const blob = new Blob(voiceChunks, { type: voiceMediaRecorder.mimeType });
+          await processAndAnalyzeVoice(blob);
+        };
+        
+        document.getElementById('waveform-container').style.display = 'flex';
+        const recordBtn = document.getElementById('voice-record-btn');
+        recordBtn.style.background = '#e53e3e';
+        
+        voiceCountdown = 10;
+        recordBtn.innerHTML = `⏹️ 録音中...${voiceCountdown}秒`;
+        
+        voiceMediaRecorder.start();
+        
+        voiceTimer = setInterval(() => {
+          voiceCountdown--;
+          if (voiceCountdown <= 0) {
+            stopVoiceRecording();
+          } else {
+            recordBtn.innerHTML = `⏹️ 録音中...${voiceCountdown}秒`;
+          }
+        }, 1000);
+        
+      } catch (err) {
+        window.showToast("マイクの使用許可が必要です。", "error");
+      }
+    }
+
+    function stopVoiceRecording() {
+      if (voiceTimer) {
+        clearInterval(voiceTimer);
+        voiceTimer = null;
+      }
+      if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
+        voiceMediaRecorder.stop();
+      }
+      
+      document.getElementById('waveform-container').style.display = 'none';
+      const recordBtn = document.getElementById('voice-record-btn');
+      recordBtn.style.background = '#ff5e5e';
+      recordBtn.innerHTML = `🔴 録音開始`;
+    }
+
+    async function handleVoiceFile(e) {
+      const allowed = await checkVoiceFeatureAccess();
+      if (!allowed) {
+        e.target.value = '';
+        return;
+      }
+      
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const statusEl = document.getElementById('voice-status');
+      statusEl.innerHTML = `⏳ ファイル解析中...`;
+      
+      try {
+        await processAndAnalyzeVoice(file);
+      } catch (err) {
+        window.showToast("ファイルの処理に失敗しました。", "error");
+      } finally {
+        e.target.value = '';
+      }
+    }
+
+    function audioBufferToWavMono(buffer) {
+      const numOfChan = 1;
+      const sampleRate = buffer.sampleRate;
+      const numSamples = buffer.length;
+      const length = numSamples * 2 + 44;
+      const bufferArr = new ArrayBuffer(length);
+      const view = new DataView(bufferArr);
+      
+      let pos = 0;
+      
+      function setUint16(data) {
+        view.setUint16(pos, data, true);
+        pos += 2;
+      }
+
+      function setUint32(data) {
+        view.setUint32(pos, data, true);
+        pos += 4;
+      }
+      
+      setUint32(0x46464952);                         // "RIFF"
+      setUint32(length - 8);                         // file length - 8
+      setUint32(0x45564157);                         // "WAVE"
+      setUint32(0x20746d66);                         // "fmt " chunk
+      setUint32(16);                                 // chunk length
+      setUint16(1);                                  // sample format (raw)
+      setUint16(numOfChan);                          // channel count
+      setUint32(sampleRate);                         // sample rate
+      setUint32(sampleRate * 2 * numOfChan);         // byte rate
+      setUint16(numOfChan * 2);                      // block align
+      setUint16(16);                                 // bits per sample
+      setUint32(0x61746164);                         // "data" - chunk
+      setUint32(length - pos - 4);                   // chunk length
+
+      const channelData = [];
+      for (let i = 0; i < buffer.numberOfChannels; i++) {
+        channelData.push(buffer.getChannelData(i));
+      }
+      
+      for (let offset = 0; offset < numSamples; offset++) {
+        let mix = 0;
+        for (let i = 0; i < buffer.numberOfChannels; i++) {
+          mix += channelData[i][offset];
+        }
+        mix = mix / buffer.numberOfChannels;
+        const sample = Math.max(-1, Math.min(1, mix));
+        const val = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+        view.setInt16(pos, val, true);
+        pos += 2;
+      }
+      
+      return new Blob([bufferArr], {type: "audio/wav"});
+    }
+
+    async function processAndAnalyzeVoice(fileOrBlob) {
+      const statusEl = document.getElementById('voice-status');
+      statusEl.innerHTML = `⏳ 音声デコード中...`;
+      
+      try {
+        const arrayBuffer = await fileOrBlob.arrayBuffer();
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        const wavBlob = audioBufferToWavMono(audioBuffer);
+        
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const base64Data = reader.result.split(',')[1];
+          statusEl.innerHTML = `⏳ AIで音声解析中...`;
+          
+          try {
+            const user = window._auth?.currentUser;
+            if (!user) throw new Error("Unauthorized");
+            const token = await user.getIdToken();
+            
+            const res = await fetch(`${FUNCTIONS_BASE_URL}/transcribeAudio`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Firebase-Auth': token
+              },
+              body: JSON.stringify({
+                audio: base64Data,
+                species: appMode
+              })
+            });
+            
+            const data = await res.json();
+            if (!res.ok) {
+              throw new Error(data.message || data.error || "Transcription failed");
+            }
+            
+            const chipId = data.chipId;
+            const matchedLabel = data.label;
+            
+            if (chipId && chipId !== 'unknown') {
+              selectChipById(chipId);
+              window.showToast(`✅ ${matchedLabel}を検出しました`, "success");
+              window.voiceDiagnosisUsed = true;
+              await window.refreshUserUI();
+            } else {
+              window.showToast("手動でボタンを選んでね", "error");
+            }
+            
+          } catch (err) {
+            window.showToast("解析に失敗しました。" + err.message, "error");
+          } finally {
+            statusEl.innerHTML = `鳴き声を録音するか、音声・動画ファイルをアップロードして\nAIに解析させることができます。\n※ 月額プランまたは都度購入（80円/回）でご利用いただけます。`;
+          }
+        };
+        reader.readAsDataURL(wavBlob);
+        
+      } catch (err) {
+        window.showToast("音声の処理に失敗しました。", "error");
+        statusEl.innerHTML = `鳴き声を録音するか、音声・動画ファイルをアップロードして\nAIに解析させることができます。\n※ 月額プランまたは都度購入（80円/回）でご利用いただけます。`;
+      }
+    }
+
+    function selectChipById(chipId) {
+      selectedBehaviors = [chipId];
+      
+      const container = document.getElementById('behavior-chips');
+      if (!container) return;
+      
+      const chips = container.querySelectorAll('.chip');
+      const behaviors = appMode === 'dog' ? DOG_BEHAVIORS : CAT_BEHAVIORS;
+      
+      chips.forEach((btn, idx) => {
+        const b = behaviors[idx];
+        if (b && b.id === chipId) {
+          btn.classList.add('selected');
+        } else {
+          btn.classList.remove('selected');
+        }
+      });
+      
       updateSubmitButtons();
     }
 
@@ -4216,7 +4628,11 @@
                 if (snap.exists()) {
                   const data = snap.data();
                   let isMonthlyActive = false;
-                  if ((data.monthlyPlanActive || data.subscriptionStatus === "active") && data.monthlyPlanExpiry) {
+                  if (data) {
+                    const activeFlags = [data.monthlyPlanActive, data.isPremium, data.subscriptionStatus];
+                    isMonthlyActive = activeFlags.some(flag => flag === true || flag === 'true' || flag === 'active');
+                  }
+                  if (!isMonthlyActive && data.monthlyPlanExpiry) {
                     const expiry = data.monthlyPlanExpiry?.toDate ? data.monthlyPlanExpiry.toDate() : null;
                     isMonthlyActive = expiry && expiry > new Date();
                   }
@@ -5078,11 +5494,118 @@ ${pet.memories ? '思い出：' + pet.memories : ''}
           }
         }
       }
+      window.closePrivateModeModal = () => {
+        const overlay = document.getElementById('private-mode-overlay');
+        if (overlay) {
+          overlay.style.display = 'none';
+        }
+      };
+
+      window.showPrivateModeModal = () => {
+        const overlay = document.getElementById('private-mode-overlay');
+        if (overlay) {
+          overlay.style.display = 'flex';
+        }
+      };
+
+      async function detectPrivateMode() {
+        // 1. localStorage write test
+        try {
+          localStorage.setItem('__private_test__', '1');
+          localStorage.removeItem('__private_test__');
+        } catch (e) {
+          return true;
+        }
+
+        // 2. OPFS test (Safari private mode blocks this or throws DOMException)
+        if (navigator.storage && navigator.storage.getDirectory) {
+          try {
+            await navigator.storage.getDirectory();
+          } catch (e) {
+            return true;
+          }
+        }
+
+        // 3. Chrome Incognito storage limit test
+        const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+        if (isChrome && navigator.storage && navigator.storage.estimate) {
+          try {
+            const estimate = await navigator.storage.estimate();
+            if (estimate.quota && estimate.quota < 120 * 1024 * 1024) {
+              return true;
+            }
+          } catch (e) {}
+        }
+
+        // 4. IndexedDB write capability test
+        const isIdbWritable = await new Promise((resolve) => {
+          try {
+            if (!window.indexedDB) {
+              resolve(false);
+              return;
+            }
+            const dbName = '__private_test_db__';
+            indexedDB.deleteDatabase(dbName);
+            const request = indexedDB.open(dbName, 1);
+            request.onupgradeneeded = (e) => {
+              try {
+                const db = e.target.result;
+                db.createObjectStore('test_store');
+              } catch (err) {}
+            };
+            request.onsuccess = (e) => {
+              const db = e.target.result;
+              try {
+                const transaction = db.transaction(['test_store'], 'readwrite');
+                const store = transaction.objectStore('test_store');
+                const putReq = store.put('val', 'key');
+                putReq.onsuccess = () => {
+                  db.close();
+                  indexedDB.deleteDatabase(dbName);
+                  resolve(true);
+                };
+                putReq.onerror = () => {
+                  db.close();
+                  resolve(false);
+                };
+              } catch (err) {
+                db.close();
+                resolve(false);
+              }
+            };
+            request.onerror = () => {
+              resolve(false);
+            };
+          } catch (err) {
+            resolve(false);
+          }
+        });
+
+        if (!isIdbWritable) {
+          return true;
+        }
+
+        return false;
+      }
 
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', checkWebViewLoad);
+        document.addEventListener('DOMContentLoaded', () => {
+          checkWebViewLoad();
+          detectPrivateMode().then(isPrivate => {
+            window.isPrivateMode = isPrivate;
+            if (isPrivate) {
+              window.showPrivateModeModal();
+            }
+          });
+        });
       } else {
         checkWebViewLoad();
+        detectPrivateMode().then(isPrivate => {
+          window.isPrivateMode = isPrivate;
+          if (isPrivate) {
+            window.showPrivateModeModal();
+          }
+        });
       }
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {

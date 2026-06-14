@@ -336,6 +336,17 @@
     </div>
   </div>
 
+  <!-- Private Mode Warning Modal -->
+  <div id="private-mode-overlay" class="instagram-block-overlay">
+    <div class="instagram-block-content">
+      <div class="instagram-block-icon">🔒</div>
+      <h2 id="private-mode-title">🔒 プライベートモードでは使用できません</h2>
+      <p id="private-mode-desc" style="margin-bottom: 24px;">SafariのプライベートモードではGoogleログインや<br>ログイン状態の保持ができません。<br>通常のSafariで開いてからご利用ください。</p>
+      <button onclick="closePrivateModeModal()" class="btn" style="background:#999; color:#fff; font-weight:700; border-radius:28px; padding:14px 24px; border:none; width:100%; cursor:pointer; font-family:inherit; transition: all 0.2s;">閉じる</button>
+    </div>
+  </div>
+
+
   <div class="container">
     <h1>月額プランの解約</h1>
 
@@ -519,9 +530,20 @@
 
     // Google Login logic
     window.loginWithGoogle = async () => {
+      // Check Private mode first
+      if (window.isPrivateMode) {
+        if (window.showPrivateModeModal) {
+          window.showPrivateModeModal();
+        } else {
+          alert('🔒 プライベートモードでは使用できません\n\nSafariのプライベートモードではGoogleログインやログイン状態の保持ができません。通常のSafariで開いてからご利用ください。');
+        }
+        return;
+      }
+
       // Check WebView environment first
       if (window.isWebViewEnv && window.isWebViewEnv()) {
         const msg = window.getWebViewWarningMessage ? window.getWebViewWarningMessage() : 'このアプリ内ブラウザではGoogleログインができません。外部ブラウザで開いてからログインしてください。';
+
         alert(msg);
         return;
       }
@@ -807,10 +829,128 @@
         }
       }
 
+      window.closePrivateModeModal = () => {
+        const overlay = document.getElementById('private-mode-overlay');
+        if (overlay) {
+          overlay.style.display = 'none';
+        }
+      };
+
+      window.showPrivateModeModal = () => {
+        const overlay = document.getElementById('private-mode-overlay');
+        if (overlay) {
+          overlay.style.display = 'flex';
+        }
+      };
+
+      async function detectPrivateMode() {
+        // 1. localStorage write test
+        try {
+          localStorage.setItem('__private_test__', '1');
+          localStorage.removeItem('__private_test__');
+        } catch (e) {
+          return true;
+        }
+
+        // 2. OPFS test (Safari private mode blocks this or throws DOMException)
+        if (navigator.storage && navigator.storage.getDirectory) {
+          try {
+            await navigator.storage.getDirectory();
+          } catch (e) {
+            return true;
+          }
+        }
+
+        // 3. Chrome Incognito storage limit test
+        const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+        if (isChrome && navigator.storage && navigator.storage.estimate) {
+          try {
+            const estimate = await navigator.storage.estimate();
+            if (estimate.quota && estimate.quota < 120 * 1024 * 1024) {
+              return true;
+            }
+          } catch (e) {}
+        }
+
+        // 4. IndexedDB write capability test
+        const isIdbWritable = await new Promise((resolve) => {
+          try {
+            if (!window.indexedDB) {
+              resolve(false);
+              return;
+            }
+            const dbName = '__private_test_db__';
+            indexedDB.deleteDatabase(dbName);
+            const request = indexedDB.open(dbName, 1);
+            request.onupgradeneeded = (e) => {
+              try {
+                const db = e.target.result;
+                db.createObjectStore('test_store');
+              } catch (err) {}
+            };
+            request.onsuccess = (e) => {
+              const db = e.target.result;
+              try {
+                const transaction = db.transaction(['test_store'], 'readwrite');
+                const store = transaction.objectStore('test_store');
+                const putReq = store.put('val', 'key');
+                putReq.onsuccess = () => {
+                  db.close();
+                  indexedDB.deleteDatabase(dbName);
+                  resolve(true);
+                };
+                putReq.onerror = () => {
+                  db.close();
+                  resolve(false);
+                };
+              } catch (err) {
+                db.close();
+                resolve(false);
+              }
+            };
+            request.onerror = () => {
+              resolve(false);
+            };
+          } catch (err) {
+            resolve(false);
+          }
+        });
+
+        if (!isIdbWritable) {
+          return true;
+        }
+
+        return false;
+      }
+
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', checkWebViewLoad);
+        document.addEventListener('DOMContentLoaded', () => {
+          checkWebViewLoad();
+          detectPrivateMode().then(isPrivate => {
+            window.isPrivateMode = isPrivate;
+            if (isPrivate) {
+              window.showPrivateModeModal();
+              const loginBtn = document.getElementById('google-login-btn');
+              if (loginBtn) {
+                loginBtn.classList.add('disabled-btn');
+                loginBtn.setAttribute('disabled', 'true');
+              }
+            }
+          });
+        });
       } else {
         checkWebViewLoad();
+        detectPrivateMode().then(isPrivate => {
+          window.isPrivateMode = isPrivate;
+          if (isPrivate) {
+            window.showPrivateModeModal();
+            const loginBtn = document.getElementById('google-login-btn');
+            if (loginBtn) {
+              loginBtn.classList.add('disabled-btn');
+              loginBtn.setAttribute('disabled', 'true');
+            }
+          }
+        });
       }
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {

@@ -7,3 +7,7 @@ functions/node_modules/
 .firebase/
 firebase-debug.log
 firebase-debug.*.log
+
+hayamise-deploy.md
+hayamise-pwd.md
+hayamise-status.md

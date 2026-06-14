@@ -18,12 +18,13 @@ const smtpUser = defineSecret("SMTP_USER");
 const smtpPass = defineSecret("SMTP_PASS");
 const smtpHost = defineSecret("SMTP_HOST");
 const smtpPort = defineSecret("SMTP_PORT");
+const openAiApiKey = defineSecret("OPENAI_API_KEY");
 
 // ─── CORS ヘルパー ────────────────────────────────────────────────────────────
 function setCors(res) {
   res.set("Access-Control-Allow-Origin", "*");
   res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Firebase-Auth");
+  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Firebase-Auth, X-Guest-Mode");
 }
 
 // ─── Firebase Auth トークン検証 ───────────────────────────────────────────────
@@ -77,13 +78,19 @@ exports.claudeProxy = onRequest(
     try {
       // 1. Auth検証（必須）
       let uid = null;
-      try {
-        const decoded = await verifyToken(req);
-        uid = decoded.uid;
-      } catch (err) {
-        console.error("verifyToken failed:", err.message);
-        res.status(401).json({ error: "UNAUTHORIZED", message: "認証が必要です。" });
-        return;
+      const isGuestMode = req.headers["x-guest-mode"] === "true";
+
+      if (isGuestMode) {
+        uid = "guest";
+      } else {
+        try {
+          const decoded = await verifyToken(req);
+          uid = decoded.uid;
+        } catch (err) {
+          console.error("verifyToken failed:", err.message);
+          res.status(401).json({ error: "UNAUTHORIZED", message: "認証が必要です。" });
+          return;
+        }
       }
 
       const { messages, system, isFollowUp } = req.body;
@@ -92,8 +99,8 @@ exports.claudeProxy = onRequest(
         return;
       }
 
-      // クレジット減算処理（isFollowUp が偽の場合のみ）
-      if (!isFollowUp) {
+      // クレジット減算処理（isFollowUp が偽の場合のみ、ゲストはスキップ）
+      if (!isFollowUp && !isGuestMode) {
         const userRef = db.collection("users").doc(uid);
         const today = todayJST();
         const currentMonth = today.slice(0, 7);
@@ -1038,6 +1045,188 @@ exports.adminOp = onRequest(
         before: currentData,
         after: updatedSnap.data()
       });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+exports.transcribeAudio = onRequest(
+  {
+    secrets: [anthropicApiKey, openAiApiKey],
+    cors: true,
+    region: "asia-northeast1",
+    invoker: "public",
+  },
+  async (req, res) => {
+    setCors(res);
+    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+
+    try {
+      let uid = null;
+      try {
+        const decoded = await verifyToken(req);
+        uid = decoded.uid;
+      } catch (err) {
+        res.status(401).json({ error: "UNAUTHORIZED", message: "認証が必要です。" });
+        return;
+      }
+
+      const { audio, species } = req.body;
+      if (!audio) {
+        res.status(400).json({ error: "audio is required" });
+        return;
+      }
+
+      const userRef = db.collection("users").doc(uid);
+      const today = todayJST();
+      const currentMonth = today.slice(0, 7);
+
+      try {
+        await db.runTransaction(async (t) => {
+          const userSnap = await t.get(userRef);
+          if (!userSnap.exists) {
+            throw new Error("USER_NOT_FOUND");
+          }
+
+          const data = userSnap.data();
+          if (data.isBanned) {
+            throw new Error("BANNED");
+          }
+
+          let isMonthlyActive = false;
+          if ((data.monthlyPlanActive || data.subscriptionStatus === "active") && data.monthlyPlanExpiry) {
+            const expiry = data.monthlyPlanExpiry.toDate ? data.monthlyPlanExpiry.toDate() : new Date(data.monthlyPlanExpiry);
+            isMonthlyActive = expiry > new Date();
+          }
+
+          const lastUsedMonth = data.lastUsedMonth || "";
+          const monthlyLimit = data.monthlyLimit || 100;
+          const monthlyCount = lastUsedMonth === currentMonth ? (data.monthlyCount || 0) : 0;
+          
+          const perUseCredits = data.perUseCredits || 0;
+          const lastUsedDateVal = data.lastUsedDate || "";
+          const resolvedTodayCount = lastUsedDateVal === today ? (data.todayCount || 0) : 0;
+
+          const updates = {};
+
+          if (isMonthlyActive && monthlyCount < monthlyLimit) {
+            updates.todayCount = resolvedTodayCount + 1;
+            updates.lastUsedDate = today;
+            updates.usageCount = admin.firestore.FieldValue.increment(1);
+            updates.monthlyCount = monthlyCount + 1;
+            updates.lastUsedMonth = currentMonth;
+          } else if (perUseCredits > 0) {
+            updates.perUseCredits = perUseCredits - 1;
+            updates.todayCount = resolvedTodayCount + 1;
+            updates.lastUsedDate = today;
+            updates.usageCount = admin.firestore.FieldValue.increment(1);
+          } else {
+            throw new Error("INSUFFICIENT_CREDITS");
+          }
+
+          t.update(userRef, updates);
+        });
+      } catch (txErr) {
+        if (txErr.message === "USER_NOT_FOUND") {
+          res.status(404).json({ error: "USER_NOT_FOUND", message: "ユーザー情報が見つかりません。" });
+          return;
+        } else if (txErr.message === "BANNED") {
+          res.status(403).json({ error: "BANNED", message: "利用停止されているアカウントです。" });
+          return;
+        } else if (txErr.message === "INSUFFICIENT_CREDITS") {
+          res.status(402).json({ error: "INSUFFICIENT_CREDITS", message: "クレジットが不足しています。月額プランまたは都度購入チケットが必要です。" });
+          return;
+        } else {
+          res.status(500).json({ error: "TRANSACTION_ERROR", message: txErr.message });
+          return;
+        }
+      }
+
+      const openaiKey = (openAiApiKey.value() || "").trim();
+      if (!openaiKey) {
+        throw new Error("OPENAI_API_KEY is not configured on the server.");
+      }
+
+      const formData = new FormData();
+      const fileBlob = new Blob([Buffer.from(audio, "base64")], { type: "audio/wav" });
+      formData.append("file", fileBlob, "audio.wav");
+      formData.append("model", "whisper-1");
+
+      const openAiResponse = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${openaiKey}`
+        },
+        body: formData
+      });
+
+      if (!openAiResponse.ok) {
+        const errorText = await openAiResponse.text();
+        throw new Error(`Whisper API returned error: ${errorText}`);
+      }
+
+      const openAiData = await openAiResponse.json();
+      const transcript = openAiData.text || "";
+
+      const Anthropic = require("@anthropic-ai/sdk");
+      const AnthropicClass = Anthropic.default ?? Anthropic;
+      const rawApiKey = process.env.ANTHROPIC_API_KEY || (typeof anthropicApiKey !== "undefined" ? anthropicApiKey.value() : "");
+      const claudeApiKey = (rawApiKey || "").trim();
+      const anthropicClient = new AnthropicClass({ apiKey: claudeApiKey });
+
+      const petLabel = species === "cat" ? "猫" : "犬";
+      const dogChips = [
+        { id: 'bark_short', label: 'ワン！（短く1回）' },
+        { id: 'bark_repeat', label: 'ワンワン！（連続）' },
+        { id: 'whine', label: 'クーン...（甘え鳴き）' },
+        { id: 'growl', label: 'ウゥ...（唸り）' }
+      ];
+      const catChips = [
+        { id: 'meow', label: 'ニャー！' },
+        { id: 'purr', label: 'ゴロゴロ...' },
+        { id: 'hiss', label: 'シャー！' },
+        { id: 'trill', label: 'クルル...' }
+      ];
+      const validChips = species === "cat" ? catChips : dogChips;
+      const chipsPromptList = validChips.map(c => `- ${c.id}: ${c.label}`).join("\n");
+
+      const systemPrompt = `You are a pet behavior specialist. You will classify a transcription of a ${petLabel} sound into one of these behavior categories:
+${chipsPromptList}
+- unknown: Any sound that does not match these, or if no sound/barking was transcribed.
+
+Return ONLY a valid JSON object of the format:
+{ "chipId": "selected_id_here", "label": "selected_label_here" }
+If categorized as "unknown", return:
+{ "chipId": "unknown", "label": "" }
+Do not output any other text or reasoning. Only return the JSON.`;
+
+      const response = await anthropicClient.messages.create({
+        model: "claude-sonnet-4-5",
+        max_tokens: 128,
+        system: systemPrompt,
+        messages: [{ role: "user", content: `Transcript: "${transcript}"` }]
+      });
+
+      const responseText = response.content[0]?.text || "";
+
+      let resultObj = { chipId: "unknown", label: "" };
+      try {
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          resultObj = JSON.parse(jsonMatch[0]);
+        }
+      } catch (err) {
+        // Bypassed
+      }
+
+      res.json({
+        transcript,
+        chipId: resultObj.chipId || "unknown",
+        label: resultObj.label || ""
+      });
+
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

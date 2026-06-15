@@ -1073,7 +1073,7 @@ exports.transcribeAudio = onRequest(
         return;
       }
 
-      const { audio, species } = req.body;
+      const { audio, species, mimeType } = req.body;
       if (!audio) {
         res.status(400).json({ error: "audio is required" });
         return;
@@ -1149,9 +1149,30 @@ exports.transcribeAudio = onRequest(
         throw new Error("OPENAI_API_KEY is not configured on the server.");
       }
 
+      let ext = "wav";
+      let contentType = "audio/wav";
+      if (mimeType) {
+        if (mimeType.includes("webm")) {
+          ext = "webm";
+          contentType = "audio/webm";
+        } else if (mimeType.includes("mp4") || mimeType.includes("m4a") || mimeType.includes("x-m4a")) {
+          ext = "m4a";
+          contentType = "audio/m4a";
+        } else if (mimeType.includes("ogg")) {
+          ext = "ogg";
+          contentType = "audio/ogg";
+        } else if (mimeType.includes("mp3") || mimeType.includes("mpeg")) {
+          ext = "mp3";
+          contentType = "audio/mpeg";
+        } else if (mimeType.includes("wav")) {
+          ext = "wav";
+          contentType = "audio/wav";
+        }
+      }
+
       const formData = new FormData();
-      const fileBlob = new Blob([Buffer.from(audio, "base64")], { type: "audio/wav" });
-      formData.append("file", fileBlob, "audio.wav");
+      const fileBlob = new Blob([Buffer.from(audio, "base64")], { type: contentType });
+      formData.append("file", fileBlob, `audio.${ext}`);
       formData.append("model", "whisper-1");
 
       const openAiResponse = await fetch("https://api.openai.com/v1/audio/transcriptions", {

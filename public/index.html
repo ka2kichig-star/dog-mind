@@ -2293,6 +2293,11 @@
 AIに解析させることができます。
 ※ 月額プランまたは都度購入（80円/回）でご利用いただけます。</div>
             
+            <!-- アップロードプログレスバー -->
+            <div id="voice-progress-container" style="display: none; width: 100%; max-width: 280px; height: 8px; background: #e0e0e0; border-radius: 4px; margin: 10px auto 16px; overflow: hidden; position: relative;">
+              <div id="voice-progress-bar" style="width: 0%; height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.1s linear;"></div>
+            </div>
+            
             <div id="waveform-container" style="display: none; align-items: center; justify-content: center; gap: 4px; height: 30px; margin-bottom: 12px;">
               <div style="width: 4px; height: 15px; background: #ff5e5e; border-radius: 2px; animation: wave 0.8s ease-in-out infinite;"></div>
               <div style="width: 4px; height: 25px; background: #ff5e5e; border-radius: 2px; animation: wave 0.8s ease-in-out infinite 0.1s;"></div>
@@ -4369,6 +4374,11 @@ AIに解析させることができます。
         voiceTimer = null;
       }
       if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
+        try {
+          voiceMediaRecorder.requestData();
+        } catch (e) {
+          console.error("requestData error:", e);
+        }
         voiceMediaRecorder.stop();
       }
       
@@ -4400,119 +4410,102 @@ AIに解析させることができます。
       }
     }
 
-    function audioBufferToWavMono(buffer) {
-      const numOfChan = 1;
-      const sampleRate = buffer.sampleRate;
-      const numSamples = buffer.length;
-      const length = numSamples * 2 + 44;
-      const bufferArr = new ArrayBuffer(length);
-      const view = new DataView(bufferArr);
-      
-      let pos = 0;
-      
-      function setUint16(data) {
-        view.setUint16(pos, data, true);
-        pos += 2;
-      }
-
-      function setUint32(data) {
-        view.setUint32(pos, data, true);
-        pos += 4;
-      }
-      
-      setUint32(0x46464952);                         // "RIFF"
-      setUint32(length - 8);                         // file length - 8
-      setUint32(0x45564157);                         // "WAVE"
-      setUint32(0x20746d66);                         // "fmt " chunk
-      setUint32(16);                                 // chunk length
-      setUint16(1);                                  // sample format (raw)
-      setUint16(numOfChan);                          // channel count
-      setUint32(sampleRate);                         // sample rate
-      setUint32(sampleRate * 2 * numOfChan);         // byte rate
-      setUint16(numOfChan * 2);                      // block align
-      setUint16(16);                                 // bits per sample
-      setUint32(0x61746164);                         // "data" - chunk
-      setUint32(length - pos - 4);                   // chunk length
-
-      const channelData = [];
-      for (let i = 0; i < buffer.numberOfChannels; i++) {
-        channelData.push(buffer.getChannelData(i));
-      }
-      
-      for (let offset = 0; offset < numSamples; offset++) {
-        let mix = 0;
-        for (let i = 0; i < buffer.numberOfChannels; i++) {
-          mix += channelData[i][offset];
-        }
-        mix = mix / buffer.numberOfChannels;
-        const sample = Math.max(-1, Math.min(1, mix));
-        const val = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
-        view.setInt16(pos, val, true);
-        pos += 2;
-      }
-      
-      return new Blob([bufferArr], {type: "audio/wav"});
-    }
-
     async function processAndAnalyzeVoice(fileOrBlob) {
       const statusEl = document.getElementById('voice-status');
-      statusEl.innerHTML = `⏳ 音声デコード中...`;
+      const progressContainer = document.getElementById('voice-progress-container');
+      const progressBar = document.getElementById('voice-progress-bar');
+      
+      if (fileOrBlob.size < 100) {
+        window.showToast("音声が短すぎるか、データが無効です。もう少し長く録音してみてね。🐾", "error");
+        if (progressContainer) progressContainer.style.display = 'none';
+        statusEl.innerHTML = `鳴き声を録音するか、音声・動画ファイルをアップロードして\nAIに解析させることができます。\n※ 月額プランまたは都度購入（80円/回）でご利用いただけます。`;
+        return;
+      }
+
+      statusEl.innerHTML = `⏳ 音声データの準備中...`;
+      if (progressContainer) progressContainer.style.display = 'block';
+      if (progressBar) progressBar.style.width = '0%';
       
       try {
         const arrayBuffer = await fileOrBlob.arrayBuffer();
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-        const wavBlob = audioBufferToWavMono(audioBuffer);
         
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          const base64Data = reader.result.split(',')[1];
-          statusEl.innerHTML = `⏳ AIで音声解析中...`;
-          
-          try {
-            const user = window._auth?.currentUser;
-            if (!user) throw new Error("Unauthorized");
-            const token = await user.getIdToken();
-            
-            const res = await fetch(`${FUNCTIONS_BASE_URL}/transcribeAudio`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-Firebase-Auth': token
-              },
-              body: JSON.stringify({
-                audio: base64Data,
-                species: appMode
-              })
-            });
-            
-            const data = await res.json();
-            if (!res.ok) {
-              throw new Error(data.message || data.error || "Transcription failed");
-            }
-            
-            const chipId = data.chipId;
-            const matchedLabel = data.label;
-            
-            if (chipId && chipId !== 'unknown') {
-              selectChipById(chipId);
-              window.showToast(`✅ ${matchedLabel}を検出しました`, "success");
-              window.voiceDiagnosisUsed = true;
-              await window.refreshUserUI();
-            } else {
-              window.showToast("手動でボタンを選んでね", "error");
-            }
-            
-          } catch (err) {
-            window.showToast("解析に失敗しました。" + err.message, "error");
-          } finally {
-            statusEl.innerHTML = `鳴き声を録音するか、音声・動画ファイルをアップロードして\nAIに解析させることができます。\n※ 月額プランまたは都度購入（80円/回）でご利用いただけます。`;
+        let binary = '';
+        const bytes = new Uint8Array(arrayBuffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64Data = window.btoa(binary);
+        const mimeType = fileOrBlob.type || 'audio/webm';
+        
+        statusEl.innerHTML = `⏳ 音声データをアップロード中... (0%)`;
+        
+        const user = window._auth?.currentUser;
+        if (!user) throw new Error("Unauthorized");
+        const token = await user.getIdToken();
+        
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${FUNCTIONS_BASE_URL}/transcribeAudio`);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('X-Firebase-Auth', token);
+        
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            if (progressBar) progressBar.style.width = percentComplete + '%';
+            statusEl.innerHTML = `⏳ 音声データをアップロード中... (${Math.round(percentComplete)}%)`;
           }
         };
-        reader.readAsDataURL(wavBlob);
+        
+        xhr.onload = async () => {
+          if (progressBar) progressBar.style.width = '100%';
+          statusEl.innerHTML = `⏳ AIで音声解析中...`;
+          
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              const chipId = data.chipId;
+              const matchedLabel = data.label;
+              
+              if (chipId && chipId !== 'unknown') {
+                selectChipById(chipId);
+                window.showToast(`✅ ${matchedLabel}を検出しました`, "success");
+                window.voiceDiagnosisUsed = true;
+                await window.refreshUserUI();
+              } else {
+                window.showToast("手動でボタンを選んでね", "error");
+              }
+            } catch (e) {
+              window.showToast("解析結果の読み込みに失敗しました。", "error");
+            }
+          } else {
+            let errMsg = "Transcription failed";
+            try {
+              const data = JSON.parse(xhr.responseText);
+              errMsg = data.message || data.error || errMsg;
+            } catch(e) {}
+            window.showToast("解析に失敗しました。" + errMsg, "error");
+          }
+          
+          if (progressContainer) progressContainer.style.display = 'none';
+          statusEl.innerHTML = `鳴き声を録音するか、音声・動画ファイルをアップロードして\nAIに解析させることができます。\n※ 月額プランまたは都度購入（80円/回）でご利用いただけます。`;
+        };
+        
+        xhr.onerror = () => {
+          window.showToast("アップロード中にネットワークエラーが発生しました。", "error");
+          if (progressContainer) progressContainer.style.display = 'none';
+          statusEl.innerHTML = `鳴き声を録音するか、音声・動画ファイルをアップロードして\nAIに解析させることができます。\n※ 月額プランまたは都度購入（80円/回）でご利用いただけます。`;
+        };
+        
+        xhr.send(JSON.stringify({
+          audio: base64Data,
+          species: appMode,
+          mimeType: mimeType
+        }));
         
       } catch (err) {
-        window.showToast("音声の処理に失敗しました。", "error");
+        window.showToast("音声の処理に失敗しました。" + err.message, "error");
+        if (progressContainer) progressContainer.style.display = 'none';
         statusEl.innerHTML = `鳴き声を録音するか、音声・動画ファイルをアップロードして\nAIに解析させることができます。\n※ 月額プランまたは都度購入（80円/回）でご利用いただけます。`;
       }
     }

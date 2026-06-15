@@ -927,6 +927,36 @@
       opacity: 0.7 !important;
     }
 
+    .login-banner.compact {
+      background: transparent !important;
+      color: #777 !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      margin-top: 4px;
+      margin-bottom: 12px;
+      font-size: 11px;
+      font-weight: normal;
+      cursor: default;
+    }
+    .login-banner.compact a {
+      color: #777;
+    }
+    body.cat-mode .login-banner.compact a,
+    body.rainbow-mode .login-banner.compact a {
+      color: inherit;
+    }
+    .login-banner.compact div[onclick] {
+      color: var(--primary);
+      display: inline-block;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+    .login-banner.compact div[onclick]:hover {
+      opacity: 0.8;
+    }
+
+
     .btn.disabled-btn {
       background: #ccc !important;
       color: #888 !important;
@@ -2100,17 +2130,35 @@
   <div class="login-menu-wrapper">
     <!-- ログインバナー -->
     <div class="login-banner" id="login-banner" style="display:none">
-      <div onclick="loginWithGoogle()" style="cursor: pointer; padding: 4px 0;">
-        🐶 Googleログインで初回3回無料診断！タップしてログイン
+      <!-- 通常の大きなバナー表示用 -->
+      <div id="login-banner-large">
+        <div onclick="loginWithGoogle()" style="cursor: pointer; padding: 4px 0;">
+          🐶 Googleログインで初回3回無料診断！タップしてログイン
+        </div>
+        <div style="margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: normal;">
+          <input type="checkbox" id="terms-checkbox" style="cursor: pointer;" onclick="event.stopPropagation()">
+          <label for="terms-checkbox" style="cursor: pointer;" onclick="event.stopPropagation()">
+            <a href="/terms.html" target="_blank" style="color: white; text-decoration: underline; font-weight: bold;">利用規約</a>に同意してログインする
+          </label>
+        </div>
+        <div style="margin-top: 4px; font-size: 10px; font-weight: normal; opacity: 0.9;">
+          ※ 未成年者のご利用は保護者の同意が必要です
+        </div>
       </div>
-      <div style="margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: normal;">
-        <input type="checkbox" id="terms-checkbox" style="cursor: pointer;" onclick="event.stopPropagation()">
-        <label for="terms-checkbox" style="cursor: pointer;" onclick="event.stopPropagation()">
-          <a href="/terms.html" target="_blank" style="color: white; text-decoration: underline; font-weight: bold;">利用規約</a>に同意してログインする
-        </label>
-      </div>
-      <div style="margin-top: 4px; font-size: 10px; font-weight: normal; opacity: 0.9;">
-        ※ 未成年者のご利用は保護者の同意が必要です
+
+      <!-- コンパクト表示用（guestCount < 3） -->
+      <div id="login-banner-compact" style="display:none;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px 0;">
+          <div onclick="loginWithGoogle()" style="cursor: pointer;">
+            すでにアカウントをお持ちの方はこちら🐾
+          </div>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 10px; font-weight: normal;">
+            <input type="checkbox" id="terms-checkbox-compact" style="cursor: pointer;" onclick="event.stopPropagation()">
+            <label for="terms-checkbox-compact" style="cursor: pointer;" onclick="event.stopPropagation()">
+              <a href="/terms.html" target="_blank" style="color: inherit; text-decoration: underline;">利用規約</a>に同意してログインする
+            </label>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -3020,10 +3068,24 @@ AIに解析させることができます。
           const snsBanner = document.getElementById('sns-webview-banner');
           if (snsBanner) snsBanner.style.display = 'none';
         }
-        // 未ログイン時のお試し無料枠の表示制御（guestCount < 3 なら非表示、>= 3 なら表示）
+        // 未ログイン時のログインバナーの表示制御（guestCount < 3 ならコンパクト表示、>= 3 なら通常表示）
         const guestCount = parseInt(localStorage.getItem('guestCount')) || 0;
         if (banner) {
-          banner.style.display = guestCount >= 3 ? 'block' : 'none';
+          if (guestCount >= 3) {
+            banner.classList.remove('compact');
+            const large = document.getElementById('login-banner-large');
+            const compact = document.getElementById('login-banner-compact');
+            if (large) large.style.display = 'block';
+            if (compact) compact.style.display = 'none';
+            banner.style.display = 'block';
+          } else {
+            banner.classList.add('compact');
+            const large = document.getElementById('login-banner-large');
+            const compact = document.getElementById('login-banner-compact');
+            if (large) large.style.display = 'none';
+            if (compact) compact.style.display = 'block';
+            banner.style.display = 'block';
+          }
         }
         badge.classList.remove('monthly-active');
         badge.textContent = '';
@@ -3187,13 +3249,19 @@ AIに解析させることができます。
 
 
       const bannerCheckbox = document.getElementById('terms-checkbox');
+      const compactCheckbox = document.getElementById('terms-checkbox-compact');
       const historyCheckbox = document.getElementById('terms-checkbox-history');
       
       let checked = false;
       if (source === 'history' && historyCheckbox) {
         checked = historyCheckbox.checked;
-      } else if (bannerCheckbox) {
-        checked = bannerCheckbox.checked;
+      } else {
+        const compactBanner = document.getElementById('login-banner-compact');
+        if (compactBanner && compactBanner.style.display !== 'none') {
+          checked = compactCheckbox ? compactCheckbox.checked : false;
+        } else if (bannerCheckbox) {
+          checked = bannerCheckbox.checked;
+        }
       }
       
       if (!checked) {
@@ -3815,7 +3883,21 @@ AIに解析させることができます。
         }
       }
       if (banner) {
-        banner.style.display = count >= 3 ? 'block' : 'none';
+        if (count >= 3) {
+          banner.classList.remove('compact');
+          const large = document.getElementById('login-banner-large');
+          const compact = document.getElementById('login-banner-compact');
+          if (large) large.style.display = 'block';
+          if (compact) compact.style.display = 'none';
+          banner.style.display = 'block';
+        } else {
+          banner.classList.add('compact');
+          const large = document.getElementById('login-banner-large');
+          const compact = document.getElementById('login-banner-compact');
+          if (large) large.style.display = 'none';
+          if (compact) compact.style.display = 'block';
+          banner.style.display = 'block';
+        }
       }
     };
 

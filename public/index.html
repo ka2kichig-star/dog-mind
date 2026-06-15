@@ -2294,8 +2294,11 @@ AIに解析させることができます。
 ※ 月額プランまたは都度購入（80円/回）でご利用いただけます。</div>
             
             <!-- アップロードプログレスバー -->
-            <div id="voice-progress-container" style="display: none; width: 100%; max-width: 280px; height: 8px; background: #e0e0e0; border-radius: 4px; margin: 10px auto 16px; overflow: hidden; position: relative;">
-              <div id="voice-progress-bar" style="width: 0%; height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.1s linear;"></div>
+            <div id="voice-progress-container" style="display: none; width: 100%; max-width: 280px; margin: 10px auto 16px; text-align: center;">
+              <div style="width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; position: relative;">
+                <div id="voice-progress-bar" style="width: 0%; height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.1s linear;"></div>
+              </div>
+              <div id="voice-progress-percent" style="font-size: 11px; color: var(--primary-dark); font-weight: bold; margin-top: 4px;">0%</div>
             </div>
             
             <div id="waveform-container" style="display: none; align-items: center; justify-content: center; gap: 4px; height: 30px; margin-bottom: 12px;">
@@ -4273,6 +4276,8 @@ AIに解析させることができます。
     let voiceChunks = [];
     let voiceTimer = null;
     let voiceCountdown = 10;
+    let voiceStartTime = 0;
+    let shouldProcessVoice = true;
 
     async function checkVoiceFeatureAccess() {
       const user = window._auth?.currentUser;
@@ -4334,6 +4339,7 @@ AIに解析させることができます。
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         voiceChunks = [];
         voiceMediaRecorder = new MediaRecorder(stream);
+        shouldProcessVoice = true;
         
         voiceMediaRecorder.ondataavailable = (e) => {
           if (e.data.size > 0) voiceChunks.push(e.data);
@@ -4341,8 +4347,17 @@ AIに解析させることができます。
         
         voiceMediaRecorder.onstop = async () => {
           stream.getTracks().forEach(track => track.stop());
-          const blob = new Blob(voiceChunks, { type: voiceMediaRecorder.mimeType });
-          await processAndAnalyzeVoice(blob);
+          if (shouldProcessVoice) {
+            const blob = new Blob(voiceChunks, { type: voiceMediaRecorder.mimeType });
+            await processAndAnalyzeVoice(blob);
+          } else {
+            const statusEl = document.getElementById('voice-status');
+            const progressContainer = document.getElementById('voice-progress-container');
+            if (progressContainer) progressContainer.style.display = 'none';
+            if (statusEl) {
+              statusEl.innerHTML = `鳴き声を録音するか、音声・動画ファイルをアップロードして\nAIに解析させることができます。\n※ 月額プランまたは都度購入（80円/回）でご利用いただけます。`;
+            }
+          }
         };
         
         document.getElementById('waveform-container').style.display = 'flex';
@@ -4352,6 +4367,7 @@ AIに解析させることができます。
         voiceCountdown = 10;
         recordBtn.innerHTML = `⏹️ 録音中...${voiceCountdown}秒`;
         
+        voiceStartTime = Date.now();
         voiceMediaRecorder.start();
         
         voiceTimer = setInterval(() => {
@@ -4373,9 +4389,18 @@ AIに解析させることができます。
         clearInterval(voiceTimer);
         voiceTimer = null;
       }
+
+      const duration = Date.now() - voiceStartTime;
+      if (duration < 1000) {
+        shouldProcessVoice = false;
+        window.showToast("手動でボタンを選んでね", "error");
+      }
+
       if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
         try {
-          voiceMediaRecorder.requestData();
+          if (shouldProcessVoice) {
+            voiceMediaRecorder.requestData();
+          }
         } catch (e) {
           console.error("requestData error:", e);
         }
@@ -4414,9 +4439,10 @@ AIに解析させることができます。
       const statusEl = document.getElementById('voice-status');
       const progressContainer = document.getElementById('voice-progress-container');
       const progressBar = document.getElementById('voice-progress-bar');
+      const progressPercent = document.getElementById('voice-progress-percent');
       
       if (fileOrBlob.size < 100) {
-        window.showToast("音声が短すぎるか、データが無効です。もう少し長く録音してみてね。🐾", "error");
+        window.showToast("手動でボタンを選んでね", "error");
         if (progressContainer) progressContainer.style.display = 'none';
         statusEl.innerHTML = `鳴き声を録音するか、音声・動画ファイルをアップロードして\nAIに解析させることができます。\n※ 月額プランまたは都度購入（80円/回）でご利用いただけます。`;
         return;
@@ -4425,6 +4451,7 @@ AIに解析させることができます。
       statusEl.innerHTML = `⏳ 音声データの準備中...`;
       if (progressContainer) progressContainer.style.display = 'block';
       if (progressBar) progressBar.style.width = '0%';
+      if (progressPercent) progressPercent.innerText = '0%';
       
       try {
         const arrayBuffer = await fileOrBlob.arrayBuffer();
@@ -4452,13 +4479,16 @@ AIに解析させることができます。
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
             const percentComplete = (event.loaded / event.total) * 100;
+            const percentRounded = Math.round(percentComplete);
             if (progressBar) progressBar.style.width = percentComplete + '%';
-            statusEl.innerHTML = `⏳ 音声データをアップロード中... (${Math.round(percentComplete)}%)`;
+            if (progressPercent) progressPercent.innerText = percentRounded + '%';
+            statusEl.innerHTML = `⏳ 音声データをアップロード中... (${percentRounded}%)`;
           }
         };
         
         xhr.onload = async () => {
           if (progressBar) progressBar.style.width = '100%';
+          if (progressPercent) progressPercent.innerText = '100%';
           statusEl.innerHTML = `⏳ AIで音声解析中...`;
           
           if (xhr.status >= 200 && xhr.status < 300) {
@@ -4472,8 +4502,6 @@ AIに解析させることができます。
                 window.showToast(`✅ ${matchedLabel}を検出しました`, "success");
                 window.voiceDiagnosisUsed = true;
                 await window.refreshUserUI();
-              } else {
-                window.showToast("手動でボタンを選んでね", "error");
               }
             } catch (e) {
               window.showToast("解析結果の読み込みに失敗しました。", "error");

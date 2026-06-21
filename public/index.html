@@ -2286,40 +2286,6 @@
 
         <!-- Behavior Tab -->
         <div id="tab-behavior" class="tab-panel">
-          <!-- 🎤 鳴き声診断 (NEW) -->
-          <div id="voice-diagnosis-section" style="background: var(--primary-light); border: 2px dashed var(--primary); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: center;">
-            <div style="font-weight: bold; font-size: 14px; margin-bottom: 10px; color: var(--primary-dark);">🎤 鳴き声診断（有料限定）</div>
-            <div id="voice-status" style="font-size: 12px; margin-bottom: 12px; color: #666; line-height: 1.5; white-space: pre-line;">鳴き声を録音するか、音声・動画ファイルをアップロードして
-AIに解析させることができます。
-※ 月額プランまたは都度購入（80円/回）でご利用いただけます。</div>
-            
-            <!-- アップロードプログレスバー -->
-            <div id="voice-progress-container" style="display: none; width: 100%; max-width: 280px; margin: 10px auto 16px; text-align: center;">
-              <div style="width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; position: relative;">
-                <div id="voice-progress-bar" style="width: 0%; height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.1s linear;"></div>
-              </div>
-              <div id="voice-progress-percent" style="font-size: 11px; color: var(--primary-dark); font-weight: bold; margin-top: 4px;">0%</div>
-            </div>
-            
-            <div id="waveform-container" style="display: none; align-items: center; justify-content: center; gap: 4px; height: 30px; margin-bottom: 12px;">
-              <div style="width: 4px; height: 15px; background: #ff5e5e; border-radius: 2px; animation: wave 0.8s ease-in-out infinite;"></div>
-              <div style="width: 4px; height: 25px; background: #ff5e5e; border-radius: 2px; animation: wave 0.8s ease-in-out infinite 0.1s;"></div>
-              <div style="width: 4px; height: 10px; background: #ff5e5e; border-radius: 2px; animation: wave 0.8s ease-in-out infinite 0.2s;"></div>
-              <div style="width: 4px; height: 28px; background: #ff5e5e; border-radius: 2px; animation: wave 0.8s ease-in-out infinite 0.3s;"></div>
-              <div style="width: 4px; height: 18px; background: #ff5e5e; border-radius: 2px; animation: wave 0.8s ease-in-out infinite 0.4s;"></div>
-            </div>
-            
-            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-              <button type="button" id="voice-record-btn" class="small-btn" style="background: #ff5e5e; display: flex; align-items: center; gap: 4px; padding: 8px 16px; border-radius: 20px;" onclick="toggleVoiceRecording()">
-                🔴 録音開始
-              </button>
-              <button type="button" class="small-btn" style="background: #757575; display: flex; align-items: center; gap: 4px; padding: 8px 16px; border-radius: 20px;" onclick="document.getElementById('voice-file-input').click()">
-                📁 音声・動画ファイルを選ぶ
-              </button>
-            </div>
-            <input type="file" id="voice-file-input" accept="audio/*,video/*" style="display: none;" onchange="handleVoiceFile(event)">
-          </div>
-
           <div class="hint">今の行動をすべて選んでね（複数OK）</div>
           <div class="chips" id="behavior-chips"></div>
           <textarea id="situation" placeholder="状況を追加（任意）例：散歩から帰ってきた直後、来客があった…"></textarea>
@@ -2662,12 +2628,38 @@ AIに解析させることができます。
     </div>
   </div>
 
+  
+  <!-- お問い合わせモーダル -->
+  <div class="pay-modal" id="contact-modal">
+    <div class="pay-box" style="max-height: 90vh; overflow-y: auto;">
+      <div style="font-size:44px;margin-bottom:10px">✉️</div>
+      <h3>お問い合わせ</h3>
+      <p style="margin-bottom: 20px;">ご質問・ご要望などお気軽にご連絡ください。<br>※返信には数日かかる場合があります。</p>
+      
+      <div style="text-align: left; margin-bottom: 16px;">
+        <span class="label">お名前（任意）</span>
+        <input class="text-input" id="contact-name" type="text" placeholder="例：山田 太郎">
+        
+        <span class="label">メールアドレス（必須）</span>
+        <input class="text-input" id="contact-email" type="email" placeholder="返信用アドレス">
+        
+        <span class="label">お問い合わせ内容（必須）</span>
+        <textarea id="contact-message" placeholder="ここに入力してください" style="height: 120px; width: 100%; box-sizing: border-box; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; font-size: 16px; margin-top: 4px; resize: vertical;"></textarea>
+      </div>
+      
+      <button class="btn" style="width:100%; box-sizing: border-box; margin-bottom: 12px;" onclick="window.submitContactForm()">
+        送信する
+      </button>
+      <button class="cancel-btn" onclick="document.getElementById('contact-modal').classList.remove('show')">閉じる</button>
+    </div>
+  </div>
+
   <div class="footer" id="footer-el">
     <div style="margin-bottom: 8px;">
       <a href="/terms.html" style="color: #ccc; text-decoration: underline; margin: 0 8px;">利用規約</a>
       <a href="/privacy.html" style="color: #ccc; text-decoration: underline; margin: 0 8px;">プライバシーポリシー</a>
       <a href="/cancel.html" style="color: #ccc; text-decoration: underline; margin: 0 8px;">解約はこちら</a>
-      <a href="https://www.instagram.com/ka2kichig" target="_blank" style="color: #ccc; text-decoration: underline; margin: 0 8px;">お問い合わせ</a>
+      <a href="#" onclick="event.preventDefault(); window.showContactModal();" style="color: #ccc; text-decoration: underline; margin: 0 8px;">お問い合わせ</a>
     </div>
     <p>&copy; 2026 わんにゃん翻訳機 🐾 Powered by Claude AI</p>
   </div>
@@ -4250,11 +4242,11 @@ AIに解析させることができます。
         const isFollowUp = window.voiceDiagnosisUsed || false;
         const text = await callClaude([{
           role: 'user',
-          content: `${petLabel}の行動・鳴き声：${labels.join('、')}\n${situation ? '状況：' + situation : ''}`
+          content: `${petLabel}の行動：${labels.join('、')}\n${situation ? '状況：' + situation : ''}`
         }],
           appMode === 'cat'
-            ? `あなたは猫の行動学の専門家です。報告された行動・鳴き声のパターンから猫の感情状態を分析し、以下の形式で答えてください：\n\n【今の気持ち】：一言で\n【なぜそう感じてるの？】：行動の理由を2〜3文で説明\n【猫の心の声】：猫自身が話しているように、2〜3文で（日本語、タメ口、語尾に「にゃ」「にゃん」をつけて可愛く）\n【飼い主へ】：今すぐできる対応のアドバイス\n\n${personalityPrompt}\n\n絵文字を使って温かみのある回答にしてください。`
-            : `あなたは犬の行動学の専門家です。報告された行動・鳴き声のパターンから犬の感情状態を分析し、以下の形式で答えてください：\n\n【今の気持ち】：一言で\n【なぜそう感じてるの？】：行動の理由を2〜3文で説明\n【犬の心の声】：犬自身が話しているように、2〜3文で（日本語、タメ口、可愛く）\n【飼い主へ】：今すぐできる対応のアドバイス\n\n${personalityPrompt}\n\n絵文字を使って温かみのある回答にしてください。`,
+            ? `あなたは猫の行動学の専門家です。報告された行動のパターンから猫の感情状態を分析し、以下の形式で答えてください：\n\n【今の気持ち】：一言で\n【なぜそう感じてるの？】：行動の理由を2〜3文で説明\n【猫の心の声】：猫自身が話しているように、2〜3文で（日本語、タメ口、語尾に「にゃ」「にゃん」をつけて可愛く）\n【飼い主へ】：今すぐできる対応のアドバイス\n\n${personalityPrompt}\n\n絵文字を使って温かみのある回答にしてください。`
+            : `あなたは犬の行動学の専門家です。報告された行動のパターンから犬の感情状態を分析し、以下の形式で答えてください：\n\n【今の気持ち】：一言で\n【なぜそう感じてるの？】：行動の理由を2〜3文で説明\n【犬の心の声】：犬自身が話しているように、2〜3文で（日本語、タメ口、可愛く）\n【飼い主へ】：今すぐできる対応のアドバイス\n\n${personalityPrompt}\n\n絵文字を使って温かみのある回答にしてください。`,
           isFollowUp
         );
         window.voiceDiagnosisUsed = false;
@@ -4283,7 +4275,7 @@ AIに解析させることができます。
       const user = window._auth?.currentUser;
       if (!user) {
         const payModalDesc = document.getElementById('pay-modal-desc');
-        if (payModalDesc) payModalDesc.textContent = '「🎤 鳴き声診断」は月額プランまたは都度購入で使えます。';
+        if (payModalDesc) payModalDesc.textContent = '';
         const monthlyCard = document.getElementById('plan-stripe-monthly');
         if (monthlyCard) monthlyCard.style.display = 'block';
         document.getElementById('pay-modal').classList.add('show');
@@ -4293,7 +4285,7 @@ AIに解析させることができます。
       const snap = await window._getDoc(ref);
       if (!snap.exists()) {
         const payModalDesc = document.getElementById('pay-modal-desc');
-        if (payModalDesc) payModalDesc.textContent = '「🎤 鳴き声診断」は月額プランまたは都度購入で使えます。';
+        if (payModalDesc) payModalDesc.textContent = '';
         const monthlyCard = document.getElementById('plan-stripe-monthly');
         if (monthlyCard) monthlyCard.style.display = 'block';
         document.getElementById('pay-modal').classList.add('show');
@@ -4315,7 +4307,7 @@ AIに解析させることができます。
         return true;
       } else {
         const payModalDesc = document.getElementById('pay-modal-desc');
-        if (payModalDesc) payModalDesc.textContent = '「🎤 鳴き声診断」は月額プランまたは都度購入で使えます。';
+        if (payModalDesc) payModalDesc.textContent = '';
         const monthlyCard = document.getElementById('plan-stripe-monthly');
         if (monthlyCard) monthlyCard.style.display = 'block';
         document.getElementById('pay-modal').classList.add('show');

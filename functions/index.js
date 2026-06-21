@@ -1,6 +1,9 @@
 /* eslint-disable */
 "use strict";
 
+// ─── headroom-ai 圧縮レイヤー ─────────────────────────────────────────────────
+const { compress } = require("headroom-ai");
+
 const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
@@ -217,6 +220,28 @@ exports.claudeProxy = onRequest(
       const rawApiKey = process.env.ANTHROPIC_API_KEY || (typeof anthropicApiKey !== "undefined" ? anthropicApiKey.value() : "");
       const apiKey = (rawApiKey || "").trim();
 
+      // ─── headroom-ai 圧縮レイヤー ─────────────────────────────────────────
+      // トークン数の近似値（JSON文字数 / 4 で推定）
+      const tokensBefore = Math.ceil(JSON.stringify(messages).length / 4);
+      let payload = messages;
+      try {
+        const compressed = await compress(messages);
+        // headroom-ai は配列または { messages } オブジェクトを返す可能性があるため両方に対応
+        payload = Array.isArray(compressed) ? compressed : (compressed.messages ?? messages);
+        const tokensAfter = Math.ceil(JSON.stringify(payload).length / 4);
+        const reduction = tokensBefore > 0
+          ? (((tokensBefore - tokensAfter) / tokensBefore) * 100).toFixed(1)
+          : "0.0";
+        console.log(
+          `[headroom] before=${tokensBefore} tokens, after=${tokensAfter} tokens, ` +
+          `reduction=${reduction}%`
+        );
+      } catch (e) {
+        console.warn("[headroom] compress skipped:", e && e.message ? e.message : e);
+        // フォールバック: 元の messages をそのまま使用
+      }
+      // ────────────────────────────────────────────────────────────────────
+
       // Initialize Anthropic client with api key
       const client = new AnthropicClass({ apiKey });
 
@@ -224,7 +249,7 @@ exports.claudeProxy = onRequest(
         model: "claude-sonnet-4-5",
         max_tokens: 1024,
         system: system || "You are a helpful assistant.",
-        messages: messages,
+        messages: payload,
       });
 
       const text = response.content[0]?.text || "";

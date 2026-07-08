@@ -21,7 +21,6 @@ const smtpUser = defineSecret("SMTP_USER");
 const smtpPass = defineSecret("SMTP_PASS");
 const smtpHost = defineSecret("SMTP_HOST");
 const smtpPort = defineSecret("SMTP_PORT");
-const openAiApiKey = defineSecret("OPENAI_API_KEY");
 
 // ─── CORS ヘルパー ────────────────────────────────────────────────────────────
 function setCors(res) {
@@ -216,9 +215,13 @@ exports.claudeProxy = onRequest(
       const Anthropic = require("@anthropic-ai/sdk");
       const AnthropicClass = Anthropic.default ?? Anthropic;
       
-      // process.env から取得し、存在しない場合は secrets オブジェクトから取得。前後の余計な改行やスペースを trim で除去します。
-      const rawApiKey = process.env.ANTHROPIC_API_KEY || (typeof anthropicApiKey !== "undefined" ? anthropicApiKey.value() : "");
-      const apiKey = (rawApiKey || "").trim();
+      // Secret Manager（defineSecret）から取得。前後の余計な改行やスペースを trim で除去します。
+      const apiKey = (anthropicApiKey.value() || "").trim();
+      if (!apiKey) {
+        console.error("ANTHROPIC_API_KEY is empty");
+        res.status(500).json({ error: "server misconfiguration" });
+        return;
+      }
 
       // ─── headroom-ai 圧縮レイヤー ─────────────────────────────────────────
       // トークン数の近似値（JSON文字数 / 4 で推定）
@@ -360,43 +363,30 @@ exports.stripeWebhook = onRequest(
       const Stripe = require("stripe");
       const stripe = new Stripe(stripeSecretKey.value().trim(), { apiVersion: "2024-06-20" });
 
-      let event = req.body;
       const signature = req.headers["stripe-signature"];
-      let webhookSecret = "";
+      const trimmedSecret = (stripeWebhookSecret.value() || "").trim();
 
+      // 署名検証は必須（バイパス禁止）。シークレット欠落はサーバ設定ミスとして500で切り分ける
+      if (!trimmedSecret) {
+        console.error("STRIPE_WEBHOOK_SECRET is not configured");
+        res.status(500).send("Webhook Error: server misconfiguration");
+        return;
+      }
+      if (!signature) {
+        console.error("Stripe Webhook rejected: missing stripe-signature header");
+        res.status(400).send("Webhook Error: missing signature");
+        return;
+      }
+
+      let event;
       try {
-        const functionsInstance = require("firebase-functions");
-        if (functionsInstance.config() && functionsInstance.config().stripe && functionsInstance.config().stripe.webhook_secret) {
-          webhookSecret = functionsInstance.config().stripe.webhook_secret;
-          console.log("Loaded webhookSecret from functions.config().stripe.webhook_secret");
-        }
-      } catch (configErr) {
-        // Ignored in v2
-      }
-
-      if (!webhookSecret) {
-        webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || (typeof stripeWebhookSecret !== "undefined" ? stripeWebhookSecret.value() : "");
-        if (webhookSecret) {
-          console.log("Loaded webhookSecret from process.env / Secret Manager");
-        }
-      }
-
-      const trimmedSecret = (webhookSecret || "").trim();
-      console.log(`webhookSecret length (trimmed): ${trimmedSecret.length}`);
-      console.log(`stripe-signature header exists: ${!!signature}`);
-
-      if (signature && trimmedSecret) {
-        try {
-          // Verify webhook signature (req.rawBody contains the buffer)
-          event = stripe.webhooks.constructEvent(req.rawBody, signature, trimmedSecret);
-          console.log(`Stripe Webhook signature verified successfully. Event: ${event.type}`);
-        } catch (err) {
-          console.error("Webhook signature verification failed:", err.message);
-          res.status(400).send(`Webhook Error: ${err.message}`);
-          return;
-        }
-      } else {
-        console.log(`Stripe Webhook signature verification bypassed. Signature: ${!!signature}, Secret: ${!!trimmedSecret}`);
+        // Verify webhook signature (req.rawBody contains the buffer)
+        event = stripe.webhooks.constructEvent(req.rawBody, signature, trimmedSecret);
+        console.log(`Stripe Webhook signature verified successfully. Event: ${event.type}`);
+      } catch (err) {
+        console.error("Webhook signature verification failed:", err.message);
+        res.status(400).send(`Webhook Error: ${err.message}`);
+        return;
       }
 
       // ─── checkout.session.completed: 初回決済完了 ───────────────────────────
